@@ -90,7 +90,7 @@ class DiscordBot(commands.Bot):
     def run(self) -> None:
         discord_token = (
             self.chatbot_params["discord_token"]
-            if self.chatbot_params["discord_token"] not in ["env", "YOUR_TOKEN_HERE"]
+            if self.chatbot_params["discord_token"] != "YOUR_TOKEN_HERE"
             else os.getenv("DISCORD_BOT_TOKEN")
         )
         super().run(discord_token)
@@ -224,4 +224,4 @@ def run(**kwargs):
         bot.chat_data[ctx.author.id] = {"turns": []}
         await ctx.send("Beep beep!")
 
-    bot.run()
+    bot.run(os.getenv("DISCORD_BOT_TOKEN"))
