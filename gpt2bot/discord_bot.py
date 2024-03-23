@@ -7,8 +7,6 @@ import asyncio
 import os
 import pickle
 
-from dotenv import load_dotenv
-
 from gpt2bot.utils import (
     setup_logger,
     translate_message_to_gif,
@@ -18,8 +16,6 @@ from gpt2bot.utils import (
     pick_best_response,
     clean_text,
 )
-
-load_dotenv()
 
 logger = setup_logger(__name__)
 

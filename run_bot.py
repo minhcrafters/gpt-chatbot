@@ -1,9 +1,14 @@
 import argparse
+import os
 
 from gpt2bot.console_bot import run as run_console_bot
 from gpt2bot.dialogue import run as run_dialogue
 from gpt2bot.discord_bot import run as run_discord_bot
 from gpt2bot.utils import parse_config
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
@@ -23,7 +28,7 @@ if __name__ == "__main__":
     arg_parser.add_argument(
         "--token",
         type=str,
-        default=None,
+        default=os.getenv("DISCORD_BOT_TOKEN"),
         help="Bot Token",
     )
 
