@@ -3,6 +3,11 @@ import logging
 import transformers
 import numpy as np
 import random
+import requests
+
+from urllib.parse import urlencode
+from requests.adapters import HTTPAdapter
+from urllib3.response import Retry
 
 
 class CustomFormatter(logging.Formatter):
@@ -333,6 +338,25 @@ def pick_best_response(prompt, responses, ranker_dict, debug=False):
     if debug:
         logger.debug(dict(final_scores=final_scores))
     return responses[np.argmax(final_scores)]
+
+
+def requests_retry_session(
+    retries=3, backoff_factor=0.3, status_forcelist=(500, 502, 504), session=None
+):
+    """Retry n times if unsuccessful."""
+
+    session = session or requests.Session()
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
 
 
 def translate_message_to_gif(message, **chatbot_params):
