@@ -80,18 +80,6 @@ class DiscordBot(commands.Bot):
 
         self.chat_started = False
 
-        # Load the pipelines
-        self.generation_pipeline = load_pipeline(
-            "text-generation",
-            device=self.device,
-            **kwargs.get("generation_pipeline_kwargs", {}),
-        )
-        self.ranker_dict = build_ranker_dict(
-            device=self.device,
-            **kwargs.get("prior_ranker_weights", {}),
-            **kwargs.get("cond_ranker_weights", {}),
-        )
-
         # Load chat data if continue_after_restart is True
         if continue_after_restart and os.path.isfile(data_filename):
             with open(data_filename, "rb") as handle:
