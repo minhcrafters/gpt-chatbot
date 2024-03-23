@@ -2,7 +2,6 @@ from logging import Formatter, Handler
 import discord
 from discord import Message
 from discord.ext import commands
-from google.colab import userdata
 import random
 import asyncio
 import os
@@ -181,7 +180,7 @@ class DiscordBot(commands.Bot):
 
                 logger.debug(f"{self.user.id} - {self.user.name}: {bot_message}")
 
-                await message.reply(bot_message)
+                await message.reply(bot_message, mention_author=False)
 
                 # if (
                 #     len(bot_message.split()) <= giphy_max_words
