@@ -224,4 +224,4 @@ def run(**kwargs):
         bot.chat_data[ctx.author.id] = {"turns": []}
         await ctx.send("Beep beep!")
 
-    bot.run(os.getenv("DISCORD_BOT_TOKEN"))
+    bot.run()
