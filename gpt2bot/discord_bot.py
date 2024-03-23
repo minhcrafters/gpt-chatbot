@@ -176,7 +176,7 @@ class DiscordBot(commands.Bot):
 
                     turn["bot_messages"].append(bot_message)
 
-                    await asyncio.sleep(10)
+                    await asyncio.sleep(5)
 
                 logger.debug(f"{self.user.id} - {self.user.name}: {bot_message}")
 
