@@ -1,0 +1,7 @@
+tensorflow
+torch
+torchvision
+torchaudio
+transformers
+python-telegram-bot
+discord.py
