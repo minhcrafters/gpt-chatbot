@@ -90,22 +90,6 @@ class DiscordBot(commands.Bot):
         else:
             self.chat_data = {}
 
-    def run(self) -> None:
-        discord_token = (
-            self.chatbot_params["discord_token"]
-            if self.chatbot_params["discord_token"] != "YOUR_TOKEN_HERE"
-            else (
-                os.getenv("DISCORD_BOT_TOKEN")
-                if os.getenv("DISCORD_BOT_TOKEN") is not None
-                else (
-                    userdata.get("DISCORD_BOT_TOKEN")
-                    if userdata.get("DISCORD_BOT_TOKEN") is not None
-                    else None
-                )
-            )
-        )
-        super().run(discord_token)
-
     async def on_ready(self):
         logger.info(f"{self.user} has connected to Discord!")
 
@@ -213,7 +197,7 @@ class DiscordBot(commands.Bot):
                 #     message.reply(gif_url)
 
 
-def run(**kwargs):
+def run(discord_token, **kwargs):
     bot = DiscordBot(command_prefix="!", **kwargs)
 
     @bot.command()
@@ -239,4 +223,4 @@ def run(**kwargs):
         bot.chat_data[ctx.author.id] = {"turns": []}
         await ctx.send("Beep beep!")
 
-    bot.run()
+    bot.run(discord_token)

@@ -10,8 +10,8 @@ if __name__ == "__main__":
     arg_parser.add_argument(
         "--type",
         type=str,
-        default="telegram",
-        help="Type of the conversation to run: telegram, console or dialogue",
+        default="discord",
+        help="Type of the conversation to run: discord, console or dialogue",
     )
     arg_parser.add_argument(
         "--config",
@@ -19,6 +19,14 @@ if __name__ == "__main__":
         default="configs/medium-cpu.cfg",
         help="Path to the config",
     )
+
+    arg_parser.add_argument(
+        "--token",
+        type=str,
+        default=None,
+        help="Bot Token",
+    )
+
     args = arg_parser.parse_args()
     config_path = args.config
     config = parse_config(config_path)
@@ -28,6 +36,6 @@ if __name__ == "__main__":
     elif args.type == "dialogue":
         run_dialogue(**config)
     elif args.type == "discord":
-        run_discord_bot(**config)
+        run_discord_bot(discord_token=args.token, **config)
     else:
         raise ValueError("Unrecognized conversation type")
