@@ -2,12 +2,13 @@ from logging import Formatter, Handler
 import discord
 from discord import Message
 from discord.ext import commands
+from google.colab import userdata
 import random
 import asyncio
 import os
 import pickle
 
-from discord.utils import MISSING
+from dotenv import load_dotenv
 
 from gpt2bot.utils import (
     setup_logger,
@@ -18,6 +19,8 @@ from gpt2bot.utils import (
     pick_best_response,
     clean_text,
 )
+
+load_dotenv()
 
 logger = setup_logger(__name__)
 
@@ -91,7 +94,15 @@ class DiscordBot(commands.Bot):
         discord_token = (
             self.chatbot_params["discord_token"]
             if self.chatbot_params["discord_token"] != "YOUR_TOKEN_HERE"
-            else os.getenv("DISCORD_BOT_TOKEN")
+            else (
+                os.getenv("DISCORD_BOT_TOKEN")
+                if os.getenv("DISCORD_BOT_TOKEN") is not None
+                else (
+                    userdata.get("DISCORD_BOT_TOKEN")
+                    if userdata.get("DISCORD_BOT_TOKEN") is not None
+                    else None
+                )
+            )
         )
         super().run(discord_token)
 
@@ -138,7 +149,7 @@ class DiscordBot(commands.Bot):
                 turn["user_messages"].append(user_message)
 
                 logger.debug(
-                    f"{message.author.id} - {[message.author.name]}: {user_message}"
+                    f"{message.author.id} - {message.author.name}: {user_message}"
                 )
 
                 # Merge turns into a single prompt (don't forget EOS token)
@@ -182,7 +193,7 @@ class DiscordBot(commands.Bot):
 
                     turn["bot_messages"].append(bot_message)
 
-                    await asyncio.sleep(15)
+                    await asyncio.sleep(10)
 
                 logger.debug(f"{self.user.id} - {self.user.name}: {bot_message}")
 
@@ -208,6 +219,10 @@ def run(**kwargs):
     @bot.command()
     async def start(ctx):
         """Start a new dialogue when user sends the command "!start"."""
+        if bot.chat_started:
+            await ctx.send("I'm already chatting. Use !reset to start a new one.")
+            return
+
         logger.debug(f"{ctx.author.id} - User: !start")
         bot.chat_data[ctx.author.id] = {"turns": []}
         bot.chat_started = True
