@@ -1,7 +1,9 @@
 from logging import Formatter, Handler
-import discord
 from discord import Message
 from discord.ext import commands
+from glob import glob
+
+import discord
 import random
 import asyncio
 import os
@@ -59,6 +61,8 @@ class DiscordBot(commands.Bot):
         continue_after_restart = chatbot_params.get("continue_after_restart", True)
         data_filename = chatbot_params.get("data_filename", "bot_data.pkl")
 
+        self.data_file = data_filename
+
         self.generation_pipeline_kwargs = generation_pipeline_kwargs
         self.generator_kwargs = generator_kwargs
         self.prior_ranker_weights = prior_ranker_weights
@@ -76,12 +80,13 @@ class DiscordBot(commands.Bot):
             device=device, **prior_ranker_weights, **cond_ranker_weights
         )
 
-        self.chat_started = False
-
-        # Load chat data if continue_after_restart is True
-        if continue_after_restart and os.path.isfile(data_filename):
-            with open(data_filename, "rb") as handle:
-                self.chat_data = pickle.load(handle)
+        if continue_after_restart:
+            self.chat_data = {}
+            for filename in glob(data_filename.replace("{USER_ID}", "*")):
+                if os.path.isfile(filename):
+                    with open(filename, "rb") as f:
+                        chat_data = pickle.load(f)
+                        self.chat_data.update(chat_data)
         else:
             self.chat_data = {}
 
@@ -99,7 +104,7 @@ class DiscordBot(commands.Bot):
         # Handle messages
         if not message.content.startswith(self.command_prefix):
             # Your message handling logic here
-            if self.chat_started:
+            if message.author.id in self.chat_data:
                 max_turns_history = self.chatbot_params.get("max_turns_history", 2)
                 giphy_prob = self.chatbot_params.get("giphy_prob", 0.1)
                 giphy_max_words = self.chatbot_params.get("giphy_max_words", 10)
@@ -198,24 +203,40 @@ def run(discord_token, **kwargs):
     @bot.command()
     async def start(ctx):
         """Start a new dialogue when user sends the command "!start"."""
-        if bot.chat_started:
+        if ctx.author.id in bot.chat_data:
             await ctx.send("I'm already chatting. Use !reset to start a new one.")
             return
 
-        logger.debug(f"{ctx.author.id} - User: !start")
+        logger.debug(f"{ctx.author.id} - {ctx.author.name}: !start")
         bot.chat_data[ctx.author.id] = {"turns": []}
         bot.chat_started = True
         await ctx.send(
             "Just start texting me. "
-            'If I\'m getting annoying, type "!reset". '
-            "Make sure to send no more than one message per turn."
+            "If I'm getting annoying, type `!reset`. "
+            "Make sure to send no more than one message per turn. "
+            "Use `!save` if you want to save your chat history with me."
         )
 
     @bot.command()
     async def reset(ctx):
         """Reset the dialogue when user sends the command "!reset"."""
-        logger.debug(f"{ctx.author.id} - User: !reset")
+        if ctx.author.id not in bot.chat_data:
+            await ctx.send("I'm not chatting. Use !start to start.")
+            return
+
+        logger.debug(f"{ctx.author.id} - {ctx.author.name}: !reset")
         bot.chat_data[ctx.author.id] = {"turns": []}
         await ctx.send("Beep beep!")
+
+    @bot.command()
+    async def save(ctx):
+        """Save the dialogue history when user sends the command "!save"."""
+        if ctx.author.id not in bot.chat_data:
+            await ctx.send("I'm not chatting. Use !start to start.")
+            return
+
+        logger.debug(f"{ctx.author.id} - {ctx.author.name}: !save")
+        with open(bot.data_file.replace("{USER_ID}", str(ctx.author.id)), "w") as f:
+            pickle.dump(bot.chat_data[ctx.author.id], f)
 
     bot.run(discord_token)
