@@ -6,9 +6,12 @@ from gpt2bot.dialogue import run as run_dialogue
 from gpt2bot.discord_bot import run as run_discord_bot
 from gpt2bot.utils import parse_config
 
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
 
-load_dotenv()
+    load_dotenv()
+except ImportError:
+    pass
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
