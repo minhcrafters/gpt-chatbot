@@ -74,7 +74,7 @@ class DiscordBot(commands.Bot):
 
         # Prepare the pipelines
         self.generation_pipeline = load_pipeline(
-            "text2text-generation", device=device, **generation_pipeline_kwargs
+            "text-generation", device=device, **generation_pipeline_kwargs
         )
         self.ranker_dict = build_ranker_dict(
             device=device, **prior_ranker_weights, **cond_ranker_weights
@@ -150,7 +150,12 @@ class DiscordBot(commands.Bot):
                 )
 
                 # Merge turns into a single prompt (don't forget EOS token)
-                prompt = ""
+                messages = [
+                    {
+                        "role": "system",
+                        "content": "You are a Discord user named Fukuya, who utilises their dry humor to cheer you up. Chat with the users as humanly as possible, by using lowercase or answers questions with silly answers.",
+                    },
+                ]
 
                 from_index = (
                     max(len(turns) - max_turns_history - 1, 0)
@@ -163,12 +168,14 @@ class DiscordBot(commands.Bot):
                     for user_message, bot_message in zip(
                         turn["user_messages"], turn["bot_messages"]
                     ):
-                        prompt += (
-                            clean_text(user_message)
-                            + " EOS "
-                            + clean_text(bot_message)
-                            + " EOS "
+                        messages.append(
+                            {"role": "user", "content": clean_text(user_message)},
+                            {"role": "assistant", "content": clean_text(bot_message)},
                         )
+
+                prompt = self.generation_pipeline.tokenizer.apply_chat_template(
+                    messages, return_tensors="pt"
+                )
 
                 async with message.channel.typing():
                     # Generate bot messages
