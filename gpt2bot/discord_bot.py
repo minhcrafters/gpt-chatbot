@@ -120,7 +120,7 @@ class DiscordBot(commands.Bot):
                         message.reference.message_id
                     )
                     user_message = (
-                        '> Reference: "'
+                        'Reference: "'
                         + reference_message.content
                         + '"\n\n'
                         + message.content
@@ -249,7 +249,7 @@ def run(discord_token, **kwargs):
             return
 
         logger.debug(f"{ctx.author.id} - {ctx.author.name}: [Saved their chat history]")
-        with open(bot.data_file.replace("{USER_ID}", str(ctx.author.id)), "w") as f:
+        with open(bot.data_file.replace("{USER_ID}", str(ctx.author.id)), "wb") as f:
             pickle.dump(bot.chat_data[ctx.author.id], f)
 
     bot.run(discord_token)
