@@ -148,7 +148,7 @@ class DiscordBot(commands.Bot):
                 turn["user_messages"].append(user_message)
 
                 logger.debug(
-                    f"{message.author.id} - {message.author.name}: {message.content}{f" (replying \"{reference_message}\")" if reference_message is not None else ''}"
+                    f"{message.author.id} - {message.author.name}: {message.content}{' (replying `{}`)'.format(reference_message) if reference_message is not None else ''}"
                 )
 
                 # Merge turns into a single prompt (don't forget EOS token)
