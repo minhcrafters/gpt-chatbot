@@ -207,7 +207,7 @@ def run(discord_token, **kwargs):
             await ctx.send("I'm already chatting. Use !reset to start a new one.")
             return
 
-        logger.debug(f"{ctx.author.id} - {ctx.author.name}: !start")
+        logger.debug(f"{ctx.author.id} - {ctx.author.name}: [Started their chat]")
         bot.chat_data[ctx.author.id] = {"turns": []}
         bot.chat_started = True
         await ctx.send(
@@ -224,7 +224,7 @@ def run(discord_token, **kwargs):
             await ctx.send("I'm not chatting. Use !start to start.")
             return
 
-        logger.debug(f"{ctx.author.id} - {ctx.author.name}: !reset")
+        logger.debug(f"{ctx.author.id} - {ctx.author.name}: [Reset their chat]")
         bot.chat_data[ctx.author.id] = {"turns": []}
         await ctx.send("Beep beep!")
 
@@ -235,7 +235,7 @@ def run(discord_token, **kwargs):
             await ctx.send("I'm not chatting. Use !start to start.")
             return
 
-        logger.debug(f"{ctx.author.id} - {ctx.author.name}: !save")
+        logger.debug(f"{ctx.author.id} - {ctx.author.name}: [Saved their chat history]")
         with open(bot.data_file.replace("{USER_ID}", str(ctx.author.id)), "w") as f:
             pickle.dump(bot.chat_data[ctx.author.id], f)
 
