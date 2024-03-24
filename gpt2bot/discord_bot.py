@@ -114,7 +114,20 @@ class DiscordBot(commands.Bot):
 
                 turns: list = self.chat_data[message.author.id]["turns"]
 
-                user_message = message.content
+                if message.reference is not None and not message.is_system():
+                    # Reference message
+                    reference_message = await message.channel.fetch_message(
+                        message.reference.message_id
+                    )
+                    user_message = (
+                        '> Reference: "'
+                        + reference_message.content
+                        + '"\n\n'
+                        + message.content
+                    )
+                else:
+                    # User message
+                    user_message = message.content
 
                 # return_gif = False
                 # if "@gif" in user_message:
