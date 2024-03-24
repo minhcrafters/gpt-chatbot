@@ -115,7 +115,7 @@ class DiscordBot(commands.Bot):
                 turns: list = self.chat_data[message.author.id]["turns"]
 
                 reference_message = None
-                
+
                 if message.reference is not None and not message.is_system():
                     # Reference message
                     reference_message = await message.channel.fetch_message(
@@ -171,8 +171,10 @@ class DiscordBot(commands.Bot):
                         turn["user_messages"], turn["bot_messages"]
                     ):
                         messages.append(
-                            {"role": "user", "content": clean_text(user_message)},
-                            {"role": "assistant", "content": clean_text(bot_message)},
+                            {"role": "user", "content": clean_text(user_message)}
+                        )
+                        messages.append(
+                            {"role": "assistant", "content": clean_text(bot_message)}
                         )
 
                 prompt = self.generation_pipeline.tokenizer.apply_chat_template(
