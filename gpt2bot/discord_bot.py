@@ -152,12 +152,13 @@ class DiscordBot(commands.Bot):
                 )
 
                 # Merge turns into a single prompt (don't forget EOS token)
-                messages = [
-                    {
-                        "role": "system",
-                        "content": "You are a Discord user named Fukuya, who utilises their dry humor to cheer you up. Chat with the users as humanly as possible, by using lowercase or answers questions with silly answers.",
-                    },
-                ]
+                prompt = ""
+                # messages = [
+                #     {
+                #         "role": "system",
+                #         "content": "You are a Discord user named Fukuya, who utilises their dry humor to cheer you up. Chat with the users as humanly as possible, by using lowercase or answers questions with silly answers.",
+                #     },
+                # ]
 
                 from_index = (
                     max(len(turns) - max_turns_history - 1, 0)
@@ -170,16 +171,24 @@ class DiscordBot(commands.Bot):
                     for user_message, bot_message in zip(
                         turn["user_messages"], turn["bot_messages"]
                     ):
-                        messages.append(
-                            {"role": "user", "content": clean_text(user_message)}
+                        prompt += (
+                            clean_text(user_message)
+                            + self.generation_pipeline.tokenizer.eos_token
                         )
-                        messages.append(
-                            {"role": "assistant", "content": clean_text(bot_message)}
+                        prompt += (
+                            clean_text(bot_message)
+                            + self.generation_pipeline.tokenizer.eos_token
                         )
+                        # messages.append(
+                        #     {"role": "user", "content": clean_text(user_message)}
+                        # )
+                        # messages.append(
+                        #     {"role": "assistant", "content": clean_text(bot_message)}
+                        # )
 
-                prompt = self.generation_pipeline.tokenizer.apply_chat_template(
-                    messages, return_tensors="pt", tokenize=False
-                )
+                # prompt = self.generation_pipeline.tokenizer.apply_chat_template(
+                #     messages, tokenize=False
+                # )
 
                 async with message.channel.typing():
                     # Generate bot messages
