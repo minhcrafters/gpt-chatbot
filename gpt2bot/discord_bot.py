@@ -176,7 +176,7 @@ class DiscordBot(commands.Bot):
                         )
 
                 prompt = self.generation_pipeline.tokenizer.apply_chat_template(
-                    messages, return_tensors="pt"
+                    messages, return_tensors="pt", tokenize=False
                 )
 
                 async with message.channel.typing():
