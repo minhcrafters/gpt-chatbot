@@ -114,13 +114,15 @@ class DiscordBot(commands.Bot):
 
                 turns: list = self.chat_data[message.author.id]["turns"]
 
+                reference_message = None
+                
                 if message.reference is not None and not message.is_system():
                     # Reference message
                     reference_message = await message.channel.fetch_message(
                         message.reference.message_id
                     )
                     user_message = (
-                        'Reference: "'
+                        'A reply to: "'
                         + reference_message.content
                         + '"\n\n'
                         + message.content
@@ -146,7 +148,7 @@ class DiscordBot(commands.Bot):
                 turn["user_messages"].append(user_message)
 
                 logger.debug(
-                    f"{message.author.id} - {message.author.name}: {user_message}"
+                    f"{message.author.id} - {message.author.name}: {message.content}{f" (replying \"{reference_message}\")" if reference_message is not None else ''}"
                 )
 
                 # Merge turns into a single prompt (don't forget EOS token)
