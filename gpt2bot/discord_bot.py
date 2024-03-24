@@ -74,7 +74,7 @@ class DiscordBot(commands.Bot):
 
         # Prepare the pipelines
         self.generation_pipeline = load_pipeline(
-            "text-generation", device=device, **generation_pipeline_kwargs
+            "text2text-generation", device=device, **generation_pipeline_kwargs
         )
         self.ranker_dict = build_ranker_dict(
             device=device, **prior_ranker_weights, **cond_ranker_weights
@@ -160,15 +160,14 @@ class DiscordBot(commands.Bot):
 
                 for turn in turns[from_index:]:
                     # Each turn begins with user messages
-                    for user_message in turn["user_messages"]:
+                    for user_message, bot_message in zip(
+                        turn["user_messages"], turn["bot_messages"]
+                    ):
                         prompt += (
                             clean_text(user_message)
-                            + self.generation_pipeline.tokenizer.eos_token
-                        )
-                    for bot_message in turn["bot_messages"]:
-                        prompt += (
-                            clean_text(bot_message)
-                            + self.generation_pipeline.tokenizer.eos_token
+                            + " EOS "
+                            + clean_text(bot_message)
+                            + " EOS "
                         )
 
                 async with message.channel.typing():

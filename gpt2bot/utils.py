@@ -222,7 +222,10 @@ def generate_responses(prompt, pipeline, seed=None, debug=False, **kwargs):
     if seed is not None:
         set_seed(seed)
 
-    outputs = pipeline(prompt, **kwargs)
+    instruction = "Instruction: given a dialog context (if there's any), you need to response in lowercase, as a human."
+    query = f"{instruction} [CONTEXT] {prompt}"
+
+    outputs = pipeline(query, **kwargs)
     responses = list(
         map(lambda x: clean_text(x["generated_text"][len(prompt) :]), outputs)
     )
