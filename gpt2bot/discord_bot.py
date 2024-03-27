@@ -169,18 +169,15 @@ class DiscordBot(commands.Bot):
                 for turn in turns[from_index:]:
                     # Each turn begins with user messages
                     
-                    user_messages = turn["user_messages"]
-                    bot_messages = turn["bot_messages"]
-                    
-                    min_len = min(len(user_messages), len(bot_messages))
+                    min_len = min(len(turn["user_messages"]), len(turn["bot_messages"]))
                     
                     for i in range(min_len):
                         prompt += (
-                            clean_text(user_messages[i])
+                            clean_text(turn["user_messages"][i])
                             + self.generation_pipeline.tokenizer.eos_token
                         )
                         prompt += (
-                            clean_text(bot_messages[i])
+                            clean_text(turn["bot_messages"][i])
                             + self.generation_pipeline.tokenizer.eos_token
                         )
                         
