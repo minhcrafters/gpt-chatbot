@@ -193,7 +193,7 @@ class DiscordBot(commands.Bot):
                             + self.generation_pipeline.tokenizer.eos_token
                         )
                         
-                    print(prompt)
+                    logger.debug("Prompt: {}".format(prompt))
                     
                         # messages.append(
                         #     {"role": "user", "content": clean_text(user_message)}
