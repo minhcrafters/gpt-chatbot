@@ -280,7 +280,7 @@ def load_pipeline(task, **kwargs):
     return transformers.pipeline(task, **kwargs)
 
 
-def clean_text(txt):
+def clean_text(txt: str):
     """Remove unnecessary spaces."""
     return " ".join(txt.strip().split())
 

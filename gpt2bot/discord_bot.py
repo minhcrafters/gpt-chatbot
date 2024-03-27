@@ -169,30 +169,32 @@ class DiscordBot(commands.Bot):
                 for turn in turns[from_index:]:
                     # Each turn begins with user messages
                     
-                    min_len = min(len(turn["user_messages"]), len(turn["bot_messages"]))
+                    # min_len = min(len(turn["user_messages"]), len(turn["bot_messages"]))
                     
-                    for i in range(min_len):
+                    # for i in range(min_len):
+                    #     prompt += (
+                    #         clean_text(turn["user_messages"][i])
+                    #         + self.generation_pipeline.tokenizer.eos_token
+                    #     )
+                    #     prompt += (
+                    #         clean_text(turn["bot_messages"][i])
+                    #         + self.generation_pipeline.tokenizer.eos_token
+                    #     )
+                        
+                    for user_message in turn["user_messages"]:
                         prompt += (
-                            clean_text(turn["user_messages"][i])
+                            clean_text(user_message)
                             + self.generation_pipeline.tokenizer.eos_token
                         )
+                        
+                    for bot_message in turn["bot_messages"]:
                         prompt += (
-                            clean_text(turn["bot_messages"][i])
+                            clean_text(bot_message)
                             + self.generation_pipeline.tokenizer.eos_token
                         )
                         
                     print(prompt)
-                        
-                    # for user_message in turn["user_messages"]:
-                    #     prompt += (
-                    #         clean_text(user_message)
-                    #         + self.generation_pipeline.tokenizer.eos_token
-                    #     )
-                    # for bot_message in turn["bot_messages"]:
-                    #     prompt += (
-                    #         clean_text(bot_message)
-                    #         + self.generation_pipeline.tokenizer.eos_token
-                    #     )
+                    
                         # messages.append(
                         #     {"role": "user", "content": clean_text(user_message)}
                         # )
