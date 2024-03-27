@@ -180,7 +180,7 @@ class DiscordBot(commands.Bot):
                             + self.generation_pipeline.tokenizer.eos_token
                         )
                         prompt += (
-                            clean_text(bot_message[i])
+                            clean_text(bot_messages[i])
                             + self.generation_pipeline.tokenizer.eos_token
                         )
                         
