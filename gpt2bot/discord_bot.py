@@ -181,6 +181,8 @@ class DiscordBot(commands.Bot):
                             + self.generation_pipeline.tokenizer.eos_token
                         )
                         
+                    print(prompt)
+                        
                     # for user_message in turn["user_messages"]:
                     #     prompt += (
                     #         clean_text(user_message)
