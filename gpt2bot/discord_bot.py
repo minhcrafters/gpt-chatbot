@@ -168,9 +168,9 @@ class DiscordBot(commands.Bot):
 
                 for turn in turns[from_index:]:
                     # Each turn begins with user messages
-                    
+
                     # min_len = min(len(turn["user_messages"]), len(turn["bot_messages"]))
-                    
+
                     # for i in range(min_len):
                     #     prompt += (
                     #         clean_text(turn["user_messages"][i])
@@ -180,27 +180,33 @@ class DiscordBot(commands.Bot):
                     #         clean_text(turn["bot_messages"][i])
                     #         + self.generation_pipeline.tokenizer.eos_token
                     #     )
-                        
+
                     for user_message in turn["user_messages"]:
                         prompt += (
                             clean_text(user_message)
                             + self.generation_pipeline.tokenizer.eos_token
                         )
-                        
+
                     for bot_message in turn["bot_messages"]:
                         prompt += (
                             clean_text(bot_message)
                             + self.generation_pipeline.tokenizer.eos_token
                         )
-                        
-                    logger.debug("Prompt: {}".format(prompt))
-                    
-                        # messages.append(
-                        #     {"role": "user", "content": clean_text(user_message)}
-                        # )
-                        # messages.append(
-                        #     {"role": "assistant", "content": clean_text(bot_message)}
-                        # )
+
+                logger.debug(
+                    "Prompt: {}".format(
+                        prompt.replace(
+                            self.generation_pipeline.tokenizer.eos_token, " | "
+                        )
+                    )
+                )
+
+                # messages.append(
+                #     {"role": "user", "content": clean_text(user_message)}
+                # )
+                # messages.append(
+                #     {"role": "assistant", "content": clean_text(bot_message)}
+                # )
 
                 # prompt = self.generation_pipeline.tokenizer.apply_chat_template(
                 #     messages, tokenize=False
@@ -245,6 +251,7 @@ class DiscordBot(commands.Bot):
                 #         bot_message, **self.chatbot_params
                 #     )
                 #     message.reply(gif_url)
+
 
 def run(discord_token, **kwargs):
     bot = DiscordBot(command_prefix="!", **kwargs)
