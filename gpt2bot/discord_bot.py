@@ -148,7 +148,7 @@ class DiscordBot(commands.Bot):
                 turn["user_messages"].append(user_message)
 
                 logger.debug(
-                    f"{message.author.id} - {message.author.name}: {message.content}{' (replying `{}`)'.format(reference_message) if reference_message is not None else ''}"
+                    f"{message.author.id} ({message.author.name}): {message.content}{' (replying `{}`)'.format(reference_message) if reference_message is not None else ''}"
                 )
 
                 # Merge turns into a single prompt (don't forget EOS token)
@@ -168,13 +168,12 @@ class DiscordBot(commands.Bot):
 
                 for turn in turns[from_index:]:
                     # Each turn begins with user messages
-                    for user_message, bot_message in zip(
-                        turn["user_messages"], turn["bot_messages"]
-                    ):
+                    for user_message in turn["user_messages"]:
                         prompt += (
                             clean_text(user_message)
                             + self.generation_pipeline.tokenizer.eos_token
                         )
+                    for bot_message in turn["bot_messages"]:
                         prompt += (
                             clean_text(bot_message)
                             + self.generation_pipeline.tokenizer.eos_token
@@ -211,7 +210,9 @@ class DiscordBot(commands.Bot):
 
                     await asyncio.sleep(5)
 
-                logger.debug(f"{self.user.id} - {self.user.name}: {bot_message}")
+                logger.debug(
+                    f"{self.user.name} (replying to {message.author.name}): {bot_message}"
+                )
 
                 await message.reply(bot_message, mention_author=False)
 
@@ -228,7 +229,6 @@ class DiscordBot(commands.Bot):
                 #     )
                 #     message.reply(gif_url)
 
-
 def run(discord_token, **kwargs):
     bot = DiscordBot(command_prefix="!", **kwargs)
 
@@ -239,7 +239,7 @@ def run(discord_token, **kwargs):
             await ctx.send("I'm already chatting. Use !reset to start a new one.")
             return
 
-        logger.debug(f"{ctx.author.id} - {ctx.author.name}: [Started their chat]")
+        logger.debug(f"{ctx.author.id} ({ctx.author.name}): [Started their chat]")
         bot.chat_data[ctx.author.id] = {"turns": []}
         bot.chat_started = True
         await ctx.send(
@@ -256,7 +256,7 @@ def run(discord_token, **kwargs):
             await ctx.send("I'm not chatting. Use !start to start.")
             return
 
-        logger.debug(f"{ctx.author.id} - {ctx.author.name}: [Reset their chat]")
+        logger.debug(f"{ctx.author.id} ({ctx.author.name}): [Reset their chat]")
         bot.chat_data[ctx.author.id] = {"turns": []}
         await ctx.send("Beep beep!")
 
@@ -267,7 +267,7 @@ def run(discord_token, **kwargs):
             await ctx.send("I'm not chatting. Use !start to start.")
             return
 
-        logger.debug(f"{ctx.author.id} - {ctx.author.name}: [Saved their chat history]")
+        logger.debug(f"{ctx.author.id} ({ctx.author.name}): [Saved their chat history]")
         with open(bot.data_file.replace("{USER_ID}", str(ctx.author.id)), "wb") as f:
             pickle.dump(bot.chat_data[ctx.author.id], f)
 

@@ -24,14 +24,84 @@ class CustomFormatter(logging.Formatter):
         purple = "\x1b[1;35m"
         reset = "\x1b[0m"
 
-    format = "%(message)s"
+    time_format = "%(asctime)s"
+    level_format = "%(levelname)s"
+    name_format = "%(name)s"
+    message_format = "%(message)s"
+
+    datefmt = "%Y/%m/%d %H:%M:%S"
 
     FORMATS = {
-        logging.DEBUG: ColorCodes.grey + format + ColorCodes.reset,
-        logging.INFO: ColorCodes.light_blue + format + ColorCodes.reset,
-        logging.WARNING: ColorCodes.yellow + format + ColorCodes.reset,
-        logging.ERROR: ColorCodes.red + format + ColorCodes.reset,
-        logging.CRITICAL: ColorCodes.bold_red + format + ColorCodes.reset,
+        logging.DEBUG: ColorCodes.grey
+        + "["
+        + time_format
+        + "]"
+        + " "
+        + ColorCodes.blue
+        + level_format
+        + " "
+        + ColorCodes.purple
+        + name_format
+        + " "
+        + ColorCodes.reset
+        + message_format
+        + ColorCodes.reset,
+        logging.INFO: ColorCodes.grey
+        + "["
+        + time_format
+        + "]"
+        + " "
+        + ColorCodes.green
+        + level_format
+        + " "
+        + ColorCodes.purple
+        + name_format
+        + " "
+        + ColorCodes.reset
+        + message_format
+        + ColorCodes.reset,
+        logging.WARNING: ColorCodes.grey
+        + "["
+        + time_format
+        + "]"
+        + " "
+        + ColorCodes.yellow
+        + level_format
+        + " "
+        + ColorCodes.purple
+        + name_format
+        + " "
+        + ColorCodes.reset
+        + message_format
+        + ColorCodes.reset,
+        logging.ERROR: ColorCodes.grey
+        + "["
+        + time_format
+        + "]"
+        + " "
+        + ColorCodes.red
+        + level_format
+        + " "
+        + ColorCodes.purple
+        + name_format
+        + " "
+        + ColorCodes.reset
+        + message_format
+        + ColorCodes.reset,
+        logging.CRITICAL: ColorCodes.grey
+        + "["
+        + time_format
+        + "]"
+        + " "
+        + ColorCodes.bold_red
+        + level_format
+        + " "
+        + ColorCodes.purple
+        + name_format
+        + " "
+        + ColorCodes.reset
+        + message_format
+        + ColorCodes.reset,
     }
 
     def format(self, record):
@@ -221,7 +291,7 @@ def generate_responses(prompt, pipeline, seed=None, debug=False, **kwargs):
     """Generate responses using a text generation pipeline."""
     if seed is not None:
         set_seed(seed)
-        
+
     outputs = pipeline(prompt, **kwargs)
     responses = list(
         map(lambda x: clean_text(x["generated_text"][len(prompt) :]), outputs)
