@@ -207,7 +207,7 @@ def parse_config(config_path):
 
 def load_pipeline(task, **kwargs):
     """Load a pipeline."""
-    logger.info(f"Loading the pipeline '{kwargs.get('model')}'...")
+    logger.info(f"Loading pipeline with '{kwargs.get('model')}'...")
 
     return transformers.pipeline(task, **kwargs)
 
