@@ -295,7 +295,7 @@ def generate_responses(prompt, pipeline, seed=None, debug=False, **kwargs):
         map(lambda x: clean_text(x["generated_text"][len(prompt) :]), outputs)
     )
     if debug:
-        logger.debug(dict(responses=responses))
+        logger.debug("Generated responses: {}".format(responses))
     return responses
 
 
@@ -377,12 +377,13 @@ def pick_best_response(prompt, responses, ranker_dict, debug=False):
                 scores = np.array(generate_scores(prompt, responses, dct["pipeline"]))
                 if debug:
                     logger.debug(
-                        dict(
-                            group=group_name,
-                            model=model_name,
-                            model_scores=scores,
-                            model_weight=dct["weight"],
-                        )
+                        # dict(
+                        #     group=group_name,
+                        #     model=model_name,
+                        #     model_scores=scores,
+                        #     model_weight=dct["weight"],
+                        # )
+                        "Group: {}, model: {}, scores: {}, weight: {}".format(group_name, model_name, scores, dct["weight"])
                     )
                 group_scores += scores * dct["weight"]
                 group_weight_sum += dct["weight"]
@@ -393,18 +394,18 @@ def pick_best_response(prompt, responses, ranker_dict, debug=False):
     if "prior" in group_names:
         prior_scores = _get_wa_group_scores("prior")
         if debug:
-            logger.debug(dict(prior_scores=prior_scores))
+            logger.debug("Prior scores: {}".format(prior_scores))
     else:
         prior_scores = 1
     if "cond" in group_names:
         cond_scores = _get_wa_group_scores("cond")
         if debug:
-            logger.debug(dict(cond_scores=cond_scores))
+            logger.debug("Condition scores: {}".format(cond_scores))
     else:
         cond_scores = 1
     final_scores = prior_scores * cond_scores
     if debug:
-        logger.debug(dict(final_scores=final_scores))
+        logger.debug("Final scores: {}".format(final_scores))
     return responses[np.argmax(final_scores)]
 
 
