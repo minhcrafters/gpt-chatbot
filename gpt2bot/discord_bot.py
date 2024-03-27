@@ -168,16 +168,32 @@ class DiscordBot(commands.Bot):
 
                 for turn in turns[from_index:]:
                     # Each turn begins with user messages
-                    for user_message in turn["user_messages"]:
+                    
+                    user_messages = turn["user_messages"]
+                    bot_messages = turn["bot_messages"]
+                    
+                    min_len = min(len(user_messages), len(bot_messages))
+                    
+                    for i in range(min_len):
                         prompt += (
-                            clean_text(user_message)
+                            clean_text(user_messages[i])
                             + self.generation_pipeline.tokenizer.eos_token
                         )
-                    for bot_message in turn["bot_messages"]:
                         prompt += (
-                            clean_text(bot_message)
+                            clean_text(bot_message[i])
                             + self.generation_pipeline.tokenizer.eos_token
                         )
+                        
+                    # for user_message in turn["user_messages"]:
+                    #     prompt += (
+                    #         clean_text(user_message)
+                    #         + self.generation_pipeline.tokenizer.eos_token
+                    #     )
+                    # for bot_message in turn["bot_messages"]:
+                    #     prompt += (
+                    #         clean_text(bot_message)
+                    #         + self.generation_pipeline.tokenizer.eos_token
+                    #     )
                         # messages.append(
                         #     {"role": "user", "content": clean_text(user_message)}
                         # )
