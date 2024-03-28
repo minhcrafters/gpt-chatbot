@@ -383,7 +383,9 @@ def pick_best_response(prompt, responses, ranker_dict, debug=False):
                         #     model_scores=scores,
                         #     model_weight=dct["weight"],
                         # )
-                        "Group: {}, model: {}, scores: {}, weight: {}".format(group_name, model_name, scores, dct["weight"])
+                        "Group: {}, model: {}, scores: {}, weight: {}".format(
+                            group_name, model_name, scores, dct["weight"]
+                        )
                     )
                 group_scores += scores * dct["weight"]
                 group_weight_sum += dct["weight"]
