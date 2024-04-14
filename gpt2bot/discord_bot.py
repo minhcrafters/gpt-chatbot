@@ -228,11 +228,20 @@ class DiscordBot(commands.Bot):
                             prompt, bot_messages, self.ranker_dict, debug=self.debug
                         )
 
-                    turn["bot_messages"].append(bot_message)
+                    bot_message = bot_message.strip()
 
                     await asyncio.sleep(5)
 
-                await message.reply(bot_message, mention_author=False)
+                if bot_message != "" or bot_message is not None:
+                    await message.reply(bot_message, mention_author=False)
+
+                    turn["bot_messages"].append(bot_message)
+                else:
+                    await message.reply(
+                        "I'm sorry, I didn't get that.", mention_author=False
+                    )
+
+                    turn["bot_messages"].append("I'm sorry, I didn't get that.")
 
                 logger.debug(
                     f"{self.user.name} (replying to {message.author.name}): {bot_message}"
