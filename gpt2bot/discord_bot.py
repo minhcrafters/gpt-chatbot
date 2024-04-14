@@ -98,9 +98,6 @@ class DiscordBot(commands.Bot):
         if message.author == self.user:
             return
 
-        # Process commands first
-        await self.process_commands(message)
-
         # Handle messages
         if not message.content.startswith(self.command_prefix):
             # Your message handling logic here
@@ -259,6 +256,8 @@ class DiscordBot(commands.Bot):
                 #         bot_message, **self.chatbot_params
                 #     )
                 #     message.reply(gif_url)
+        else:
+            await self.process_commands(message)
 
 
 def run(discord_token, **kwargs):
