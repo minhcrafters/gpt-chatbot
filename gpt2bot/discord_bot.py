@@ -24,8 +24,11 @@ logger = setup_logger(__name__)
 
 class DiscordBot(commands.Bot):
     def __init__(self, command_prefix, **kwargs):
+        intents = discord.Intents.default()
+        intents.message_content = True
+        
         super().__init__(
-            command_prefix=command_prefix, intents=discord.Intents.default()
+            command_prefix=command_prefix, intents=intents
         )
 
         general_params: dict = kwargs.get("general_params", {})
