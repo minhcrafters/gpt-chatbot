@@ -103,7 +103,6 @@ class DiscordBot(commands.Bot):
 
         # Handle messages
         if not message.content.startswith(self.command_prefix):
-            # Your message handling logic here
             if message.author.id in self.chat_data:
                 max_turns_history = self.chatbot_params.get("max_turns_history", 2)
                 giphy_prob = self.chatbot_params.get("giphy_prob", 0.1)
@@ -168,35 +167,14 @@ class DiscordBot(commands.Bot):
 
                 for turn in turns[from_index:]:
                     # Each turn begins with user messages
-
-                    # min_len = min(len(turn["user_messages"]), len(turn["bot_messages"]))
-
-                    # for i in range(min_len):
-                    #     prompt += (
-                    #         clean_text(turn["user_messages"][i])
-                    #         + self.generation_pipeline.tokenizer.eos_token
-                    #     )
-                    #     prompt += (
-                    #         clean_text(turn["bot_messages"][i])
-                    #         + self.generation_pipeline.tokenizer.eos_token
-                    #     )
-
                     for user_message in turn["user_messages"]:
-                        # prompt += (
-                        #     clean_text(user_message)
-                        #     + self.generation_pipeline.tokenizer.eos_token
-                        # )
                         messages.append(
-                            {"role": "user", "content": clean_text(user_message)}
+                            {"role": "user", "content": clean_text("{{USER}}: " + user_message)}
                         )
 
                     for bot_message in turn["bot_messages"]:
-                        # prompt += (
-                        #     clean_text(bot_message)
-                        #     + self.generation_pipeline.tokenizer.eos_token
-                        # )
                         messages.append(
-                            {"role": "assistant", "content": clean_text(bot_message)}
+                            {"role": "assistant", "content": clean_text(f"{self.user.name}: {bot_message}")}
                         )
 
                 prompt = self.generation_pipeline.tokenizer.apply_chat_template(
@@ -228,7 +206,7 @@ class DiscordBot(commands.Bot):
                             prompt, bot_messages, self.ranker_dict, debug=self.debug
                         )
 
-                    bot_message = bot_message.strip()
+                    bot_message = bot_message.strip().split(": ")[-1]
 
                     await asyncio.sleep(5)
 
