@@ -89,7 +89,7 @@ def run(**kwargs):
                     messages.append(
                         {
                             "role": "user",
-                            "content": clean_text("{{USER}}: " + user_message),
+                            "content": clean_text(user_message),
                         }
                     )
 
@@ -97,7 +97,7 @@ def run(**kwargs):
                     messages.append(
                         {
                             "role": "assistant",
-                            "content": clean_text(f"estelleee: {bot_message}"),
+                            "content": clean_text(bot_message),
                         }
                     )
 
@@ -116,7 +116,7 @@ def run(**kwargs):
                     prompt, bot_messages, ranker_dict, debug=debug
                 )
                 
-            bot_message = bot_message.strip().split(": ")[-1]
+            bot_message = bot_message.strip()
                 
             print("NTTS:", bot_message)
             turn["bot_messages"].append(bot_message)

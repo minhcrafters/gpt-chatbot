@@ -169,12 +169,12 @@ class DiscordBot(commands.Bot):
                     # Each turn begins with user messages
                     for user_message in turn["user_messages"]:
                         messages.append(
-                            {"role": "user", "content": clean_text("{{USER}}: " + user_message)}
+                            {"role": "user", "content": clean_text(user_message)}
                         )
 
                     for bot_message in turn["bot_messages"]:
                         messages.append(
-                            {"role": "assistant", "content": clean_text(f"{self.user.name}: {bot_message}")}
+                            {"role": "assistant", "content": clean_text(bot_message)}
                         )
 
                 prompt = self.generation_pipeline.tokenizer.apply_chat_template(
@@ -206,7 +206,7 @@ class DiscordBot(commands.Bot):
                             prompt, bot_messages, self.ranker_dict, debug=self.debug
                         )
 
-                    bot_message = bot_message.strip().split(": ")[-1]
+                    bot_message = bot_message.strip()
 
                     await asyncio.sleep(5)
 
