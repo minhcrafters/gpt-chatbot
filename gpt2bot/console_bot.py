@@ -77,7 +77,7 @@ def run(**kwargs):
             turns.append(turn)
             turn["user_messages"].append(prompt)
             # Merge turns into a single prompt (don't forget delimiter)
-            prompt = ""
+            messages = []
             from_index = (
                 max(len(turns) - max_turns_history - 1, 0)
                 if max_turns_history >= 0
@@ -86,15 +86,24 @@ def run(**kwargs):
             for turn in turns[from_index:]:
                 # Each turn begins with user messages
                 for user_message in turn["user_messages"]:
-                    prompt += (
-                        clean_text(user_message)
-                        + generation_pipeline.tokenizer.eos_token
+                    messages.append(
+                        {
+                            "role": "user",
+                            "content": clean_text("{{USER}}: " + user_message),
+                        }
                     )
+
                 for bot_message in turn["bot_messages"]:
-                    prompt += (
-                        clean_text(bot_message)
-                        + generation_pipeline.tokenizer.eos_token
+                    messages.append(
+                        {
+                            "role": "assistant",
+                            "content": clean_text(f"estelleee: {bot_message}"),
+                        }
                     )
+
+            prompt = generation_pipeline.tokenizer.apply_chat_template(
+                messages, tokenize=False
+            )
 
             # Generate bot messages
             bot_messages = generate_responses(
@@ -106,6 +115,9 @@ def run(**kwargs):
                 bot_message = pick_best_response(
                     prompt, bot_messages, ranker_dict, debug=debug
                 )
+                
+            bot_message = bot_message.strip().split(": ")[-1]
+                
             print("NTTS:", bot_message)
             turn["bot_messages"].append(bot_message)
     except KeyboardInterrupt:
