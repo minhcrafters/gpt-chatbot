@@ -76,7 +76,7 @@ class DiscordBot(commands.Bot):
 
         # Prepare the pipelines
         self.generation_pipeline = load_pipeline(
-            "transformers.models.auto.modeling_auto.AutoModelForSeq2SeqLM", device=device, **generation_pipeline_kwargs
+            "transformers.models.auto.AutoModelForSeq2SeqLM", device=device, **generation_pipeline_kwargs
         )
         self.ranker_dict = build_ranker_dict(
             device=device, **prior_ranker_weights, **cond_ranker_weights
