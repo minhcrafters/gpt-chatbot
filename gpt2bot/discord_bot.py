@@ -17,6 +17,7 @@ from gpt2bot.utils import (
     generate_responses,
     pick_best_response,
     clean_text,
+    Map
 )
 
 logger = setup_logger(__name__)
@@ -26,10 +27,8 @@ class DiscordBot(commands.Bot):
     def __init__(self, command_prefix, **kwargs):
         intents = discord.Intents.default()
         intents.message_content = True
-        
-        super().__init__(
-            command_prefix=command_prefix, intents=intents
-        )
+
+        super().__init__(command_prefix=command_prefix, intents=intents)
 
         general_params: dict = kwargs.get("general_params", {})
         device = general_params.get("device", -1)
@@ -77,7 +76,7 @@ class DiscordBot(commands.Bot):
 
         # Prepare the pipelines
         self.generation_pipeline = load_pipeline(
-            "text2text-generation", device=device, **generation_pipeline_kwargs
+            "transformers.AutoModelForSeq2SeqLM", device=device, **generation_pipeline_kwargs
         )
         self.ranker_dict = build_ranker_dict(
             device=device, **prior_ranker_weights, **cond_ranker_weights
@@ -177,15 +176,18 @@ class DiscordBot(commands.Bot):
                             {"role": "assistant", "content": clean_text(bot_message)}
                         )
 
-                prompt = "\n".join([f"pychael.: {m['content']}" if m["role"] == "assistant" else f"USER: {m['content']}" for m in messages])
-
-                logger.debug(
-                    "Prompt: {}".format(
-                        prompt.replace(
-                            self.generation_pipeline.tokenizer.eos_token, " | "
+                prompt = "\n".join(
+                    [
+                        (
+                            f"pychael.: {m['content']}"
+                            if m["role"] == "assistant"
+                            else f"USER: {m['content']}"
                         )
-                    )
+                        for m in messages
+                    ]
                 )
+
+                logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
 
                 async with message.channel.typing():
                     # Generate bot messages
@@ -209,7 +211,9 @@ class DiscordBot(commands.Bot):
                     await asyncio.sleep(5)
 
                 if bot_message != "" or bot_message is not None:
-                    await message.reply(bot_message.split(": ")[-1], mention_author=False)
+                    await message.reply(
+                        bot_message.split(": ")[-1], mention_author=False
+                    )
 
                     turn["bot_messages"].append(bot_message)
                 else:
