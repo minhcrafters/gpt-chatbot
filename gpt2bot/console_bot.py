@@ -72,17 +72,21 @@ def run(**kwargs):
             if prompt.startswith("/"):
                 print("Command not recognized.")
                 continue
+            
             # A single turn is a group of user messages and bot responses right after
             turn = {"user_messages": [], "bot_messages": []}
             turns.append(turn)
             turn["user_messages"].append(prompt)
+            
             # Merge turns into a single prompt (don't forget delimiter)
             messages = []
+            
             from_index = (
                 max(len(turns) - max_turns_history - 1, 0)
                 if max_turns_history >= 0
                 else 0
             )
+            
             for turn in turns[from_index:]:
                 # Each turn begins with user messages
                 for user_message in turn["user_messages"]:
@@ -105,21 +109,33 @@ def run(**kwargs):
             #     messages, tokenize=False
             # )
 
-            prompt = "\n".join([m["content"] if m["role"] == "assistant" else f"USER: {m['content']}" for m in messages])
-            
+            prompt = "\n".join(
+                [
+                    (
+                        m["content"]
+                        if m["role"] == "assistant"
+                        else f"USER: {m['content']}"
+                    )
+                    for m in messages
+                ]
+            )
+
+            logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
+
             # Generate bot messages
             bot_messages = generate_responses(
                 prompt, generation_pipeline, seed=seed, debug=debug, **generator_kwargs
             )
+            
             if len(bot_messages) == 1:
                 bot_message = bot_messages[0]
             else:
                 bot_message = pick_best_response(
                     prompt, bot_messages, ranker_dict, debug=debug
                 )
-                
+
             bot_message = bot_message.strip()
-                
+
             print("BOT:", bot_message.split(": ")[-1])
             turn["bot_messages"].append(bot_message)
     except KeyboardInterrupt:

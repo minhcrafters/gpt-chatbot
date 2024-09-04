@@ -179,7 +179,7 @@ class DiscordBot(commands.Bot):
                 prompt = "\n".join(
                     [
                         (
-                            f"pychael.: {m['content']}"
+                            m['content']
                             if m["role"] == "assistant"
                             else f"USER: {m['content']}"
                         )
