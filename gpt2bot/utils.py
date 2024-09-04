@@ -311,13 +311,17 @@ def parse_config(config_path):
 
 def load_pipeline(task: str, **kwargs):
     """Load a pipeline."""
-    logger.info(f"Loading model '{kwargs.get('model')}' for task '{task.split('.')[-1]}'...")
+    logger.info(f"Loading model pipeline '{kwargs.get('model')}' for task '{task.split('.')[-1]}'...")
+
+    return transformers.pipeline(task, **kwargs)
+
+def load_model(**kwargs):
+    logger.info(f"Loading model '{kwargs.get('model')}'...")
     
     model = transformers.AutoModelForSeq2SeqLM.from_pretrained(kwargs.get('model'))
     tokenizer = transformers.AutoTokenizer.from_pretrained(kwargs.get('model'))
-
+    
     return transformers.pipeline(model=model, tokenizer=tokenizer, **kwargs)
-
 
 def clean_text(txt: str):
     """Remove unnecessary spaces."""
