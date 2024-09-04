@@ -177,7 +177,7 @@ class DiscordBot(commands.Bot):
                             {"role": "assistant", "content": clean_text(bot_message)}
                         )
 
-                prompt = "\n".join([f"pychael.: {m["content"]}" if m["role"] == "assistant" else f"USER: {m['content']}" for m in messages])
+                prompt = "\n".join([f"pychael.: {m['content']}" if m["role"] == "assistant" else f"USER: {m['content']}" for m in messages])
 
                 logger.debug(
                     "Prompt: {}".format(
