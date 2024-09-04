@@ -311,7 +311,7 @@ def parse_config(config_path):
 
 def load_pipeline(task: str, **kwargs):
     """Load a pipeline."""
-    logger.info(f"Loading model '{kwargs.get('model')}' for task '{task.split(".")[-1]}'...")
+    logger.info(f"Loading model '{kwargs.get('model')}' for task '{task.split('.')[-1]}'...")
     
     pipeline: transformers.PreTrainedModel = importlib.import_module(task)
     
