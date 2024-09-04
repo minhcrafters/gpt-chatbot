@@ -157,6 +157,8 @@ class DiscordBot(commands.Bot):
                     #     "content": "You are a Discord user named Fukuya, who utilises their dry humor to cheer you up. Chat with the users as humanly as possible, by using lowercase or answers questions with silly answers.",
                     # },
                 ]
+                
+                prompt = "Continue writing the following text.\n\n"
 
                 from_index = (
                     max(len(turns) - max_turns_history - 1, 0)
@@ -176,7 +178,7 @@ class DiscordBot(commands.Bot):
                             {"role": "assistant", "content": clean_text(bot_message)}
                         )
 
-                prompt = "\n".join(
+                prompt += "\n".join(
                     [
                         (
                             m['content']

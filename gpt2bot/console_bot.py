@@ -80,6 +80,7 @@ def run(**kwargs):
             
             # Merge turns into a single prompt (don't forget delimiter)
             messages = []
+            prompt = "Continue writing the following text.\n\n"
             
             from_index = (
                 max(len(turns) - max_turns_history - 1, 0)
@@ -109,7 +110,7 @@ def run(**kwargs):
             #     messages, tokenize=False
             # )
 
-            prompt = "\n".join(
+            prompt += "\n".join(
                 [
                     (
                         m["content"]

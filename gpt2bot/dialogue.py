@@ -69,12 +69,10 @@ def run(**kwargs):
                         for bot1_message in turn["bot1_messages"]:
                             prompt += (
                                 clean_text(bot1_message)
-                                + generation_pipeline.tokenizer.eos_token
                             )
                         for bot2_message in turn["bot2_messages"]:
                             prompt += (
                                 clean_text(bot2_message)
-                                + generation_pipeline.tokenizer.eos_token
                             )
 
                     # Generate bot messages
