@@ -13,7 +13,6 @@ from gpt2bot.utils import (
     setup_logger,
     translate_message_to_gif,
     load_pipeline,
-    load_model,
     build_ranker_dict,
     generate_responses,
     pick_best_response,
@@ -76,8 +75,8 @@ class DiscordBot(commands.Bot):
         self.debug = debug
 
         # Prepare the pipelines
-        self.generation_pipeline = load_model(
-            device=device, **generation_pipeline_kwargs
+        self.generation_pipeline = load_pipeline(
+            "text2text-generation", device=device, **generation_pipeline_kwargs
         )
         self.ranker_dict = build_ranker_dict(
             device=device, **prior_ranker_weights, **cond_ranker_weights

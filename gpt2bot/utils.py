@@ -311,17 +311,9 @@ def parse_config(config_path):
 
 def load_pipeline(task: str, **kwargs):
     """Load a pipeline."""
-    logger.info(f"Loading model pipeline '{kwargs.get('model')}' for task '{task.split('.')[-1]}'...")
+    logger.info(f"Loading model '{kwargs.get('model')}' for task '{task.split('.')[-1]}'...")
 
     return transformers.pipeline(task, **kwargs)
-
-def load_model(**kwargs):
-    logger.info(f"Loading model '{kwargs.get('model')}'...")
-    
-    model = transformers.AutoModelForSeq2SeqLM.from_pretrained(kwargs.get('model'))
-    tokenizer = transformers.AutoTokenizer.from_pretrained(kwargs.get('model'))
-    
-    return transformers.pipeline(model=model, tokenizer=tokenizer, **kwargs)
 
 def clean_text(txt: str):
     """Remove unnecessary spaces."""
@@ -335,7 +327,7 @@ def generate_responses(prompt, pipeline, seed=None, debug=False, **kwargs):
 
     outputs = pipeline(prompt, **kwargs)
     responses = list(
-        map(lambda x: clean_text(x["generated_text"][len(prompt) :]), outputs)
+        map(lambda x: clean_text(x["generated_text"]), outputs)
     )
     if debug:
         logger.debug("Generated responses: {}".format(responses))
