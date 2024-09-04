@@ -45,7 +45,7 @@ def run(**kwargs):
 
     # Prepare the pipelines
     generation_pipeline = load_pipeline(
-        "transformers.AutoModelForSeq2SeqLM", device=device, **generation_pipeline_kwargs
+        "transformers.models.auto.modeling_auto.AutoModelForSeq2SeqLM", device=device, **generation_pipeline_kwargs
     )
     ranker_dict = build_ranker_dict(
         device=device, **prior_ranker_weights, **cond_ranker_weights
