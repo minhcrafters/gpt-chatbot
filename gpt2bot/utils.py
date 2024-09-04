@@ -313,9 +313,7 @@ def load_pipeline(task: str, **kwargs):
     """Load a pipeline."""
     logger.info(f"Loading model '{kwargs.get('model')}' for task '{task.split('.')[-1]}'...")
     
-    pipeline: transformers.PreTrainedModel = importlib.import_module(task)
-    
-    model = pipeline.from_pretrained(kwargs.get('model'))
+    model = transformers.AutoModelForSeq2SeqLM.from_pretrained(kwargs.get('model'))
     tokenizer = transformers.AutoTokenizer.from_pretrained(kwargs.get('model'))
 
     return transformers.pipeline(model=model, tokenizer=tokenizer, **kwargs)
