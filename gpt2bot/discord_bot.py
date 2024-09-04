@@ -177,9 +177,7 @@ class DiscordBot(commands.Bot):
                             {"role": "assistant", "content": clean_text(bot_message)}
                         )
 
-                prompt = self.generation_pipeline.tokenizer.apply_chat_template(
-                    messages, tokenize=False
-                )
+                prompt = "\n".join([m["content"] if m["role"] == "assistant" else f"USER: {m['content']}" for m in messages])
 
                 logger.debug(
                     "Prompt: {}".format(
@@ -211,12 +209,12 @@ class DiscordBot(commands.Bot):
                     await asyncio.sleep(5)
 
                 if bot_message != "" or bot_message is not None:
-                    await message.reply(bot_message, mention_author=False)
+                    await message.reply(bot_message.split(": ")[-1], mention_author=False)
 
                     turn["bot_messages"].append(bot_message)
                 else:
                     await message.reply(
-                        "I'm sorry, I didn't get that.", mention_author=False
+                        "`I'm sorry, I didn't get that.`", mention_author=False
                     )
 
                     turn["bot_messages"].append("I'm sorry, I didn't get that.")

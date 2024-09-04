@@ -101,10 +101,12 @@ def run(**kwargs):
                         }
                     )
 
-            prompt = generation_pipeline.tokenizer.apply_chat_template(
-                messages, tokenize=False
-            )
+            # prompt = generation_pipeline.tokenizer.apply_chat_template(
+            #     messages, tokenize=False
+            # )
 
+            prompt = "\n".join([m["content"] if m["role"] == "assistant" else f"USER: {m['content']}" for m in messages])
+            
             # Generate bot messages
             bot_messages = generate_responses(
                 prompt, generation_pipeline, seed=seed, debug=debug, **generator_kwargs
@@ -118,7 +120,7 @@ def run(**kwargs):
                 
             bot_message = bot_message.strip()
                 
-            print("NTTS:", bot_message)
+            print("BOT:", bot_message.split(": ")[-1])
             turn["bot_messages"].append(bot_message)
     except KeyboardInterrupt:
         exit()
