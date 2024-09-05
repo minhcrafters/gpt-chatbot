@@ -116,7 +116,7 @@ class DiscordBot(commands.Bot):
             f"{message.author.name} ({message.author.id}): {message.content}{' (replying `{}`)'.format(reference_message) if reference_message is not None else ''}"
         )
 
-        prompt = "Continue writing the following text.\n\n"
+        prompt = ""
 
         from_index = (
             max(len(turns) - max_turns_history - 1, 0) if max_turns_history >= 0 else 0
