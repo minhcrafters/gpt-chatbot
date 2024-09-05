@@ -171,6 +171,7 @@ class DiscordBot(commands.Bot):
                 prompt += f"{bot_message}\n"
                 
                 if len(turn["user_messages"]) > 0:
+                    logger.debug(len(turn["user_messages"]))
                     await message.reply(bot_message.split(": ")[-1], mention_author=False)
                     turn["bot_messages"].append(bot_message)
                 else:
