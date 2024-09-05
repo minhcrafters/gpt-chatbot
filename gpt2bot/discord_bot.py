@@ -245,10 +245,10 @@ class DiscordBot(commands.Bot):
                 if "turns" not in self.chat_data[message.author.id]:
                     self.chat_data[message.author.id]["turns"] = []
 
-                bot_message = self.send_message(message, max_turns_history)
+                bot_message = await self.send_message(message, max_turns_history)
 
                 while len(bot_message.split(": ")[-1].split()) < 20:
-                    bot_message = self.send_message(message, max_turns_history)
+                    bot_message = await self.send_message(message, max_turns_history)
 
                 # if (
                 #     len(bot_message.split()) <= giphy_max_words
