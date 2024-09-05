@@ -312,7 +312,7 @@ def run(discord_token, **kwargs):
             f"{ctx.author.name} ({ctx.author.id}): [Set their chat parameters]"
         )
 
-        await ctx.reply(f"`{key}` have been updated to `{value}`.", ephemeral=True)
+        await ctx.reply(f"`{key}` have been updated to `{value}`.")
 
     @bot.command()
     async def reset(ctx):
