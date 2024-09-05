@@ -182,9 +182,11 @@ class DiscordBot(commands.Bot):
                 f"{self.user.name} (replying to {message.author.name}): {bot_message.split(': ')[-1]}"
             )
 
-            if len(bot_message.split()) < 4 or not is_question(bot_message):
+            if not is_question(bot_message):
                 logger.debug("Bot message too short, continuing generation...")
                 curr_message += 1
+            else:
+                break
 
     async def on_message(self, message: Message):
         # Don't respond to messages from the bot itself

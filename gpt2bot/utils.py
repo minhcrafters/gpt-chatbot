@@ -11,8 +11,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.response import Retry
 
 nltk.download("nps_chat")
-nltk.download('punkt')
-nltk.download('punkt_tab')
+nltk.download("punkt")
+nltk.download("punkt_tab")
 
 posts = nltk.corpus.nps_chat.xml_posts()[:10000]
 
