@@ -311,9 +311,12 @@ def parse_config(config_path):
 
 def load_pipeline(task: str, **kwargs):
     """Load a pipeline."""
-    logger.info(f"Loading model '{kwargs.get('model')}' for task '{task.split('.')[-1]}'...")
+    logger.info(
+        f"Loading model '{kwargs.get('model')}' for task '{task.split('.')[-1]}'..."
+    )
 
     return transformers.pipeline(task, **kwargs)
+
 
 def clean_text(txt: str):
     """Remove unnecessary spaces."""
@@ -326,9 +329,7 @@ def generate_responses(prompt, pipeline, seed=None, debug=False, **kwargs):
         set_seed(seed)
 
     outputs = pipeline(prompt, **kwargs)
-    responses = list(
-        map(lambda x: clean_text(x["generated_text"]), outputs)
-    )
+    responses = list(map(lambda x: clean_text(x["generated_text"]), outputs))
     if debug:
         logger.debug("Generated responses: {}".format(responses))
     return responses
@@ -344,7 +345,7 @@ def build_ranker_dict(**kwargs):
     width_weight = kwargs.pop("width_weight", None)
 
     ranker_dict = dict()
-    
+
     ranker_dict["bert"] = dict(
         pipeline=load_pipeline(
             "sentiment-analysis",
@@ -353,7 +354,7 @@ def build_ranker_dict(**kwargs):
         ),
         group="prior",
     )
-    
+
     if human_vs_rand_weight is not None:
         ranker_dict["human_vs_rand"] = dict(
             pipeline=load_pipeline(
@@ -414,7 +415,13 @@ def pick_best_response(prompt, responses, ranker_dict: dict, debug=False):
     if len(ranker_dict) == 0:
         return random.choice(responses)
     elif ranker_dict.get("bert", None) is not None:
-        scores = np.array(generate_scores(prompt, responses, ranker_dict["bert"]["pipeline"]))
+        scores = np.array(
+            generate_scores(prompt, responses, ranker_dict["bert"]["pipeline"])
+        )
+        
+        if debug:
+            logger.debug("BERT scores: {}".format(scores))
+            
         return responses[np.argmax(scores)]
     else:
         raise ValueError("None is happened")

@@ -78,7 +78,7 @@ class DiscordBot(commands.Bot):
         self.generation_pipeline = load_pipeline(
             "text2text-generation", device=device, **generation_pipeline_kwargs
         )
-        
+
         self.ranker_dict = build_ranker_dict(
             device=device, **prior_ranker_weights, **cond_ranker_weights
         )
@@ -109,6 +109,12 @@ class DiscordBot(commands.Bot):
                 max_turns_history = self.chatbot_params.get("max_turns_history", 2)
                 # giphy_prob = self.chatbot_params.get("giphy_prob", 0.1)
                 # giphy_max_words = self.chatbot_params.get("giphy_max_words", 10)
+
+                if "enabled" not in self.chat_data[message.author.id]:
+                    self.chat_data[message.author.id]["enabled"] = True
+
+                if self.chat_data[message.author.id]["enabled"] == False:
+                    return
 
                 if "temperature" not in self.chat_data[message.author.id]:
                     self.chat_data[message.author.id]["temperature"] = (
@@ -200,15 +206,15 @@ class DiscordBot(commands.Bot):
                 logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
 
                 modified_gen_kwargs = self.generator_kwargs.copy()
-                modified_gen_kwargs["temperature"] = self.chat_data[message.author.id][
-                    "temperature"
-                ]
-                modified_gen_kwargs["top_k"] = self.chat_data[message.author.id][
-                    "top_k"
-                ]
-                modified_gen_kwargs["top_p"] = self.chat_data[message.author.id][
-                    "top_p"
-                ]
+                modified_gen_kwargs["temperature"] = float(
+                    self.chat_data[message.author.id]["temperature"]
+                )
+                modified_gen_kwargs["top_k"] = float(
+                    self.chat_data[message.author.id]["top_k"]
+                )
+                modified_gen_kwargs["top_p"] = float(
+                    self.chat_data[message.author.id]["top_p"]
+                )
 
                 async with message.channel.typing():
                     # Generate bot messages
@@ -276,7 +282,7 @@ def run(discord_token, **kwargs):
 
         logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Started their chat]")
         bot.chat_data[ctx.author.id] = {"turns": []}
-        bot.chat_started = True
+        bot.chat_data[ctx.author.id]["enabled"] = True
         await ctx.send(
             "Just start texting me. "
             "If I'm getting annoying, type `!reset`. "
@@ -287,7 +293,7 @@ def run(discord_token, **kwargs):
     @bot.command(alias=["end"])
     async def stop(ctx):
         if ctx.author.id in bot.chat_data:
-            bot.chat_started = False
+            bot.chat_data[ctx.author.id]["enabled"] = False
             await ctx.reply("I'm done. Use `!start` when you wanna talk with me again.")
 
     @bot.command()
