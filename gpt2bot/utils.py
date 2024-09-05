@@ -344,6 +344,16 @@ def build_ranker_dict(**kwargs):
     width_weight = kwargs.pop("width_weight", None)
 
     ranker_dict = dict()
+    
+    ranker_dict["bert"] = dict(
+        pipeline=load_pipeline(
+            "sentiment-analysis",
+            model="minhcrafters/distilbert-twitter",
+            **kwargs,
+        ),
+        group="prior",
+    )
+    
     if human_vs_rand_weight is not None:
         ranker_dict["human_vs_rand"] = dict(
             pipeline=load_pipeline(
@@ -393,16 +403,21 @@ def build_ranker_dict(**kwargs):
 
 def generate_scores(prompt, responses, pipeline, **kwargs):
     """Generate scores using a text classification pipeline."""
-    responses = [prompt + response for response in responses]
+    responses = [prompt + "\n" + response for response in responses]
 
     outputs = pipeline(responses, **kwargs)
     return [output["score"] for output in outputs]
 
 
-def pick_best_response(prompt, responses, ranker_dict, debug=False):
+def pick_best_response(prompt, responses, ranker_dict: dict, debug=False):
     """Pick the best response according to the weighted average of scores."""
     if len(ranker_dict) == 0:
         return random.choice(responses)
+    elif ranker_dict.get("bert", None) is not None:
+        scores = np.array(generate_scores(prompt, responses, ranker_dict["bert"]["pipeline"]))
+        return responses[np.argmax(scores)]
+    else:
+        raise ValueError("None is happened")
 
     def _get_wa_group_scores(group_name):
         group_scores = 0

@@ -47,9 +47,11 @@ def run(**kwargs):
     generation_pipeline = load_pipeline(
         "text2text-generation", device=device, **generation_pipeline_kwargs
     )
-    ranker_dict = build_ranker_dict(
-        device=device, **prior_ranker_weights, **cond_ranker_weights
-    )
+    # ranker_dict = build_ranker_dict(
+    #     device=device, **prior_ranker_weights, **cond_ranker_weights
+    # )
+        
+    ranker_dict = []
 
     # Run the chatbot
     logger.info("Running the console bot...")
@@ -59,67 +61,68 @@ def run(**kwargs):
     try:
         while True:
             prompt = input("You: ")
-            if max_turns_history == 0:
-                turns = []
-            if prompt.lower() == "/start":
-                start_message()
-                turns = []
-                continue
-            if prompt.lower() == "/reset":
-                reset_message()
-                turns = []
-                continue
-            if prompt.startswith("/"):
-                print("Command not recognized.")
-                continue
-            
-            # A single turn is a group of user messages and bot responses right after
-            turn = {"user_messages": [], "bot_messages": []}
-            turns.append(turn)
-            turn["user_messages"].append(prompt)
-            
-            # Merge turns into a single prompt (don't forget delimiter)
-            messages = []
-            prompt = "Continue writing the following text.\n\n"
-            
-            from_index = (
-                max(len(turns) - max_turns_history - 1, 0)
-                if max_turns_history >= 0
-                else 0
-            )
-            
-            for turn in turns[from_index:]:
-                # Each turn begins with user messages
-                for user_message in turn["user_messages"]:
-                    messages.append(
-                        {
-                            "role": "user",
-                            "content": clean_text(user_message),
-                        }
-                    )
+            if prompt is not None or prompt != "":
+                if max_turns_history == 0:
+                    turns = []
+                if prompt.lower() == "/start":
+                    start_message()
+                    turns = []
+                    continue
+                if prompt.lower() == "/reset":
+                    reset_message()
+                    turns = []
+                    continue
+                if prompt.startswith("/"):
+                    print("Command not recognized.")
+                    continue
+                
+                # A single turn is a group of user messages and bot responses right after
+                turn = {"user_messages": [], "bot_messages": []}
+                turns.append(turn)
+                turn["user_messages"].append(prompt)
+                
+                # Merge turns into a single prompt (don't forget delimiter)
+                messages = []
+                prompt = "Continue writing the following text.\n\n"
+                
+                from_index = (
+                    max(len(turns) - max_turns_history - 1, 0)
+                    if max_turns_history >= 0
+                    else 0
+                )
+                
+                for turn in turns[from_index:]:
+                    # Each turn begins with user messages
+                    for user_message in turn["user_messages"]:
+                        messages.append(
+                            {
+                                "role": "user",
+                                "content": clean_text(user_message),
+                            }
+                        )
 
-                for bot_message in turn["bot_messages"]:
-                    messages.append(
-                        {
-                            "role": "assistant",
-                            "content": clean_text(bot_message),
-                        }
-                    )
+                    for bot_message in turn["bot_messages"]:
+                        messages.append(
+                            {
+                                "role": "assistant",
+                                "content": clean_text(bot_message),
+                            }
+                        )
 
-            # prompt = generation_pipeline.tokenizer.apply_chat_template(
-            #     messages, tokenize=False
-            # )
+                # prompt = generation_pipeline.tokenizer.apply_chat_template(
+                #     messages, tokenize=False
+                # )
 
-            prompt += "\n".join(
-                [
-                    (
-                        m["content"]
-                        if m["role"] == "assistant"
-                        else f"USER: {m['content']}"
-                    )
-                    for m in messages
-                ]
-            )
+                prompt += "\n".join(
+                    [
+                        (
+                            m["content"]
+                            if m["role"] == "assistant"
+                            else f"USER: {m['content']}"
+                        )
+                        for m in messages
+                    ]
+                )
 
             logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
 
