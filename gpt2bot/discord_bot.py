@@ -251,7 +251,7 @@ class DiscordBot(commands.Bot):
                     turn["bot_messages"].append("I'm sorry, I didn't get that.")
 
                 logger.debug(
-                    f"{self.user.name} (replying to {message.author.name}): {bot_message.split(": ")[-1]}"
+                    f"{self.user.name} (replying to {message.author.name}): {bot_message.split(': ')[-1]}"
                 )
 
                 # if (
