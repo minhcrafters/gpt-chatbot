@@ -20,6 +20,7 @@ from gpt2bot.utils import (
 
 logger = setup_logger(__name__)
 
+
 class DiscordBot(commands.Bot):
     def __init__(self, command_prefix, **kwargs):
         intents = discord.Intents.default()
@@ -142,7 +143,7 @@ class DiscordBot(commands.Bot):
         curr_message = 0
         while curr_message < max_messages_per_turn:
             bot_message = ""
-            
+
             logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
 
             async with message.channel.typing():
@@ -167,11 +168,13 @@ class DiscordBot(commands.Bot):
 
             if bot_message != "":
                 # Append the bot's message to the prompt in the desired format
-                
+
                 if prompt.split("\n")[-2].startswith("USER"):
                     prompt += f"{bot_message}\n"
-                    
-                    await message.reply(bot_message.split(": ")[-1], mention_author=False)
+
+                    await message.reply(
+                        bot_message.split(": ")[-1], mention_author=False
+                    )
                     turn["bot_messages"].append(bot_message)
                 else:
                     await message.channel.send(bot_message.split(": ")[-1])
@@ -283,6 +286,23 @@ def run(discord_token, **kwargs):
     async def gtfo(ctx):
         await ctx.reply("Ok lol")
         exit()
+
+    @bot.command()
+    async def userinfo(ctx, user: discord.Member = None):
+        """Display chat data for user"""
+        
+        if user is None:
+            user = ctx.author
+        
+        embed = discord.Embed(title=f"Info for user {user.name}", color=0x00BFFF)
+        embed.add_field(name="Chat enabled", value=str(bot.chat_data[user.id]["enabled"]), inline=False)
+        embed.add_field(name="Chat turns", value=str(len(bot.chat_data[user.id]["turns"])), inline=False)
+        embed.add_field(name="Temperature", value=str(bot.chat_data[user.id]["temperature"]), inline=False)
+        embed.add_field(name="Top-k", value=str(bot.chat_data[user.id]["top_k"]), inline=False)
+        embed.add_field(name="Top-p", value=str(bot.chat_data[user.id]["top_p"]), inline=False)
+        embed.set_footer(text="i hate this so much wth")
+
+        await ctx.reply(embed=embed)
 
     @bot.command()
     async def params(ctx, key: str, value):
