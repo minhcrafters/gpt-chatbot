@@ -140,7 +140,7 @@ class DiscordBot(commands.Bot):
         max_messages_per_turn = 5
 
         curr_message = 0
-        while curr_message < max_messages_per_turn:
+        while curr_message < max_messages_per_turn + 1:
             bot_message = ""
 
             # Keep generating until the response is at least 20 words long
@@ -169,9 +169,13 @@ class DiscordBot(commands.Bot):
             if bot_message != "":
                 # Append the bot's message to the prompt in the desired format
                 prompt += f"{bot_message}\n"
-
-                await message.reply(bot_message.split(": ")[-1], mention_author=False)
-                turn["bot_messages"].append(bot_message)
+                
+                if len(turn["user_messages"]) > 0:
+                    await message.reply(bot_message.split(": ")[-1], mention_author=False)
+                    turn["bot_messages"].append(bot_message)
+                else:
+                    await message.channel.send(bot_message.split(": ")[-1])
+                    turn["bot_messages"].append(bot_message)
             else:
                 await message.reply(
                     "`I'm sorry, I didn't get that.`", mention_author=False
