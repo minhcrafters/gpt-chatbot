@@ -282,8 +282,12 @@ def run(discord_token, **kwargs):
                 return
 
         logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Started their chat]")
-        # bot.chat_data[ctx.author.id] = {"turns": []}
+        
+        if ctx.author.id not in bot.chat_data:
+            bot.chat_data[ctx.author.id] = {"turns": []}
+        
         bot.chat_data[ctx.author.id]["enabled"] = True
+        
         await ctx.reply(
             "Just start texting me. "
             "If I'm getting annoying, type `!reset`. "
@@ -337,13 +341,13 @@ def run(discord_token, **kwargs):
 
     @bot.command()
     async def reset(ctx):
-        """Reset the dialogue when user sends the command "!reset"."""
+        """Reset the dialogue history when user sends the command "!reset"."""
         if ctx.author.id not in bot.chat_data:
             await ctx.send("I'm not chatting. Use !start to start.")
             return
 
         logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Reset their chat]")
-        bot.chat_data[ctx.author.id] = {"turns": []}
+        bot.chat_data[ctx.author.id]["turns"] = []
         await ctx.send("Beep beep!")
 
     @bot.command()
