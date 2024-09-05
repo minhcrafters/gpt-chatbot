@@ -167,9 +167,10 @@ class DiscordBot(commands.Bot):
 
             if bot_message != "":
                 # Append the bot's message to the prompt in the desired format
-                prompt += f"{bot_message}\n"
                 
                 if prompt.split("\n")[-2].startswith("USER"):
+                    prompt += f"{bot_message}\n"
+                    
                     await message.reply(bot_message.split(": ")[-1], mention_author=False)
                     turn["bot_messages"].append(bot_message)
                 else:
