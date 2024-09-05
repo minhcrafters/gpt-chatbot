@@ -17,7 +17,7 @@ from gpt2bot.utils import (
     generate_responses,
     pick_best_response,
     clean_text,
-    Map
+    Map,
 )
 
 logger = setup_logger(__name__)
@@ -81,7 +81,7 @@ class DiscordBot(commands.Bot):
         # self.ranker_dict = build_ranker_dict(
         #     device=device, **prior_ranker_weights, **cond_ranker_weights
         # )
-        
+
         self.ranker_dict = []
 
         if continue_after_restart:
@@ -108,14 +108,20 @@ class DiscordBot(commands.Bot):
                 max_turns_history = self.chatbot_params.get("max_turns_history", 2)
                 # giphy_prob = self.chatbot_params.get("giphy_prob", 0.1)
                 # giphy_max_words = self.chatbot_params.get("giphy_max_words", 10)
-                
+
                 if "temperature" not in self.chat_data[message.author.id]:
-                    self.chat_data[message.author.id]["temperature"] = self.generator_kwargs.get("temperature", 0.9)
+                    self.chat_data[message.author.id]["temperature"] = (
+                        self.generator_kwargs.get("temperature", 0.9)
+                    )
                 if "top_k" not in self.chat_data[message.author.id]:
-                    self.chat_data[message.author.id]["top_k"] = self.generator_kwargs.get("top_k", 80)
+                    self.chat_data[message.author.id]["top_k"] = (
+                        self.generator_kwargs.get("top_k", 80)
+                    )
                 if "top_p" not in self.chat_data[message.author.id]:
-                    self.chat_data[message.author.id]["top_p"] = self.generator_kwargs.get("top_p", 0.95)
-                    
+                    self.chat_data[message.author.id]["top_p"] = (
+                        self.generator_kwargs.get("top_p", 0.95)
+                    )
+
                 if "turns" not in self.chat_data[message.author.id]:
                     self.chat_data[message.author.id]["turns"] = []
 
@@ -124,18 +130,10 @@ class DiscordBot(commands.Bot):
                 reference_message = None
 
                 if message.reference is not None and not message.is_system():
-                    # Reference message
-                    reference_message = await message.channel.fetch_message(
-                        message.reference.message_id
-                    )
                     user_message = (
-                        'A reply to: "'
-                        + reference_message.content
-                        + '"\n\n'
-                        + message.content
+                        message.content + " (a reply to the previous message)"
                     )
                 else:
-                    # User message
                     user_message = message.content
 
                 # return_gif = False
@@ -166,7 +164,7 @@ class DiscordBot(commands.Bot):
                     #     "content": "You are a Discord user named Fukuya, who utilises their dry humor to cheer you up. Chat with the users as humanly as possible, by using lowercase or answers questions with silly answers.",
                     # },
                 ]
-                
+
                 prompt = "Continue writing the following text.\n\n"
 
                 from_index = (
@@ -190,7 +188,7 @@ class DiscordBot(commands.Bot):
                 prompt += "\n".join(
                     [
                         (
-                            m['content']
+                            m["content"]
                             if m["role"] == "assistant"
                             else f"USER: {m['content']}"
                         )
@@ -199,11 +197,17 @@ class DiscordBot(commands.Bot):
                 )
 
                 logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
-                
+
                 modified_gen_kwargs = self.generator_kwargs.copy()
-                modified_gen_kwargs['temperature'] = self.chat_data[message.author.id]["temperature"]
-                modified_gen_kwargs['top_k'] = self.chat_data[message.author.id]["top_k"]
-                modified_gen_kwargs['top_p'] = self.chat_data[message.author.id]["top_p"]
+                modified_gen_kwargs["temperature"] = self.chat_data[message.author.id][
+                    "temperature"
+                ]
+                modified_gen_kwargs["top_k"] = self.chat_data[message.author.id][
+                    "top_k"
+                ]
+                modified_gen_kwargs["top_p"] = self.chat_data[message.author.id][
+                    "top_p"
+                ]
 
                 async with message.channel.typing():
                     # Generate bot messages
@@ -278,12 +282,37 @@ def run(discord_token, **kwargs):
             "Make sure to send no more than one message per turn. "
             "Use `!save` if you want to save your chat history with me."
         )
-        
-    @bot.command(alias=['end'])
+
+    @bot.command(alias=["end"])
     async def stop(ctx):
         if ctx.author.id in bot.chat_data:
             bot.chat_started = False
             await ctx.reply("I'm done. Use `!start` when you wanna talk with me again.")
+
+    @bot.command()
+    async def params(ctx, key: str, value):
+        """Set the dialogue parameters when user sends the command "!set"."""
+        if ctx.author.id not in bot.chat_data:
+            await ctx.send("I'm not chatting. Use !start to start.")
+            return
+
+        available_options = ["temperature", "top_k", "top_p"]
+
+        key = key.lower()
+
+        if key not in available_options:
+            await ctx.send(f"Available options: `{', '.join(available_options)}`")
+            return
+
+        for k, v in kwargs.items():
+            if k != "turns":
+                bot.chat_data[ctx.author.id][key] = value
+
+        logger.debug(
+            f"{ctx.author.name} ({ctx.author.id}): [Set their chat parameters]"
+        )
+
+        await ctx.reply(f"`{key}` have been updated to `{value}`.", ephemeral=True)
 
     @bot.command()
     async def reset(ctx):

@@ -348,7 +348,7 @@ def build_ranker_dict(**kwargs):
     ranker_dict["bert"] = dict(
         pipeline=load_pipeline(
             "sentiment-analysis",
-            model="minhcrafters/distilbert-twitter",
+            model="DeepPavlov/bert-base-cased-conversational",
             **kwargs,
         ),
         group="prior",
