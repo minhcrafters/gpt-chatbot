@@ -106,9 +106,16 @@ class DiscordBot(commands.Bot):
         if not message.content.startswith(self.command_prefix):
             if message.author.id in self.chat_data:
                 max_turns_history = self.chatbot_params.get("max_turns_history", 2)
-                giphy_prob = self.chatbot_params.get("giphy_prob", 0.1)
-                giphy_max_words = self.chatbot_params.get("giphy_max_words", 10)
-
+                # giphy_prob = self.chatbot_params.get("giphy_prob", 0.1)
+                # giphy_max_words = self.chatbot_params.get("giphy_max_words", 10)
+                
+                if "temperature" not in self.chat_data[message.author.id]:
+                    self.chat_data[message.author.id]["temperature"] = self.generator_kwargs.get("temperature", 0.9)
+                if "top_k" not in self.chat_data[message.author.id]:
+                    self.chat_data[message.author.id]["top_k"] = self.generator_kwargs.get("top_k", 80)
+                if "top_p" not in self.chat_data[message.author.id]:
+                    self.chat_data[message.author.id]["top_p"] = self.generator_kwargs.get("top_p", 0.95)
+                    
                 if "turns" not in self.chat_data[message.author.id]:
                     self.chat_data[message.author.id]["turns"] = []
 
@@ -192,6 +199,11 @@ class DiscordBot(commands.Bot):
                 )
 
                 logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
+                
+                modified_gen_kwargs = self.generator_kwargs.copy()
+                modified_gen_kwargs['temperature'] = self.chat_data[message.author.id]["temperature"]
+                modified_gen_kwargs['top_k'] = self.chat_data[message.author.id]["top_k"]
+                modified_gen_kwargs['top_p'] = self.chat_data[message.author.id]["top_p"]
 
                 async with message.channel.typing():
                     # Generate bot messages
@@ -200,7 +212,7 @@ class DiscordBot(commands.Bot):
                         self.generation_pipeline,
                         seed=self.seed,
                         debug=self.debug,
-                        **self.generator_kwargs,
+                        **modified_gen_kwargs,
                     )
 
                     if len(bot_messages) == 1:
@@ -266,6 +278,12 @@ def run(discord_token, **kwargs):
             "Make sure to send no more than one message per turn. "
             "Use `!save` if you want to save your chat history with me."
         )
+        
+    @bot.command(alias=['end'])
+    async def stop(ctx):
+        if ctx.author.id in bot.chat_data:
+            bot.chat_started = False
+            await ctx.reply("I'm done. Use `!start` when you wanna talk with me again.")
 
     @bot.command()
     async def reset(ctx):
