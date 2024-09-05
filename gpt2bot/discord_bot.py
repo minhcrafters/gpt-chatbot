@@ -248,6 +248,7 @@ class DiscordBot(commands.Bot):
                 bot_message = await self.send_message(message, max_turns_history)
 
                 while len(bot_message.split(": ")[-1].split()) < 20:
+                    logger.debug("Bot message too short. Retrying...")
                     bot_message = await self.send_message(message, max_turns_history)
 
                 # if (
