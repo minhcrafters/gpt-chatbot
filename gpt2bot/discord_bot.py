@@ -209,7 +209,7 @@ class DiscordBot(commands.Bot):
                 modified_gen_kwargs["temperature"] = float(
                     self.chat_data[message.author.id]["temperature"]
                 )
-                modified_gen_kwargs["top_k"] = float(
+                modified_gen_kwargs["top_k"] = int(
                     self.chat_data[message.author.id]["top_k"]
                 )
                 modified_gen_kwargs["top_p"] = float(
