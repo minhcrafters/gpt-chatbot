@@ -98,6 +98,119 @@ class DiscordBot(commands.Bot):
     async def on_ready(self):
         logger.info(f"{self.user} has connected to Discord!")
 
+    async def send_message(self, message, max_turns_history=0):
+        turns: list = self.chat_data[message.author.id]["turns"]
+
+        reference_message = None
+
+        if message.reference is not None and not message.is_system():
+            user_message = message.content + " (a reply to the previous message)"
+        else:
+            user_message = message.content
+
+        # return_gif = False
+        # if "@gif" in user_message:
+        #     # Return gif
+        #     return_gif = True
+        #     user_message = user_message.replace("@gif", "").strip()
+
+        if max_turns_history == 0:
+            self.chat_data[message.author.id]["turns"] = []
+
+        # A single turn is a group of user messages and bot responses right after
+        turn = {"user_messages": [], "bot_messages": []}
+
+        turns.append(turn)
+
+        turn["user_messages"].append(user_message)
+
+        logger.debug(
+            f"{message.author.name} ({message.author.id}): {message.content}{' (replying `{}`)'.format(reference_message) if reference_message is not None else ''}"
+        )
+
+        # Merge turns into a single prompt (don't forget EOS token)
+        # prompt = ""
+        messages = [
+            # {
+            #     "role": "system",
+            #     "content": "You are a Discord user named Fukuya, who utilises their dry humor to cheer you up. Chat with the users as humanly as possible, by using lowercase or answers questions with silly answers.",
+            # },
+        ]
+
+        prompt = "Continue writing the following text.\n\n"
+
+        from_index = (
+            max(len(turns) - max_turns_history - 1, 0) if max_turns_history >= 0 else 0
+        )
+
+        for turn in turns[from_index:]:
+            # Each turn begins with user messages
+            for user_message in turn["user_messages"]:
+                messages.append({"role": "user", "content": clean_text(user_message)})
+
+            for bot_message in turn["bot_messages"]:
+                if bot_message is not None:
+                    messages.append(
+                        {"role": "assistant", "content": clean_text(bot_message)}
+                    )
+
+        prompt += "\n".join(
+            [
+                (m["content"] if m["role"] == "assistant" else f"USER: {m['content']}")
+                for m in messages
+            ]
+        )
+
+        logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
+
+        modified_gen_kwargs = self.generator_kwargs.copy()
+        modified_gen_kwargs["temperature"] = float(
+            self.chat_data[message.author.id]["temperature"]
+        )
+        modified_gen_kwargs["top_k"] = int(self.chat_data[message.author.id]["top_k"])
+        modified_gen_kwargs["top_p"] = float(self.chat_data[message.author.id]["top_p"])
+
+        async with message.channel.typing():
+            # Generate bot messages
+            bot_messages = generate_responses(
+                prompt,
+                self.generation_pipeline,
+                seed=self.seed,
+                debug=self.debug,
+                **modified_gen_kwargs,
+            )
+
+            if len(bot_messages) == 1:
+                bot_message = bot_messages[0]
+            else:
+                bot_message = pick_best_response(
+                    prompt, bot_messages, self.ranker_dict, debug=self.debug
+                )
+
+            bot_message = bot_message.strip()
+
+            if len(turns[-1]["bot_messages"]) > 0:
+                last_message = turns[-1]["bot_messages"][-1]
+                if bot_message == last_message:
+                    bot_message = None
+
+            await asyncio.sleep(5)
+
+        if bot_message != "" or bot_message is not None:
+            await message.reply(bot_message.split(": ")[-1], mention_author=False)
+
+            turn["bot_messages"].append(bot_message)
+        else:
+            await message.reply("`I'm sorry, I didn't get that.`", mention_author=False)
+
+            turn["bot_messages"].append("I'm sorry, I didn't get that.")
+
+        logger.debug(
+            f"{self.user.name} (replying to {message.author.name}): {bot_message.split(': ')[-1]}"
+        )
+        
+        return bot_message
+
     async def on_message(self, message: Message):
         # Don't respond to messages from the bot itself
         if message.author == self.user:
@@ -132,127 +245,10 @@ class DiscordBot(commands.Bot):
                 if "turns" not in self.chat_data[message.author.id]:
                     self.chat_data[message.author.id]["turns"] = []
 
-                turns: list = self.chat_data[message.author.id]["turns"]
+                bot_message = self.send_message(message, max_turns_history)
 
-                reference_message = None
-
-                if message.reference is not None and not message.is_system():
-                    user_message = (
-                        message.content + " (a reply to the previous message)"
-                    )
-                else:
-                    user_message = message.content
-
-                # return_gif = False
-                # if "@gif" in user_message:
-                #     # Return gif
-                #     return_gif = True
-                #     user_message = user_message.replace("@gif", "").strip()
-
-                if max_turns_history == 0:
-                    self.chat_data[message.author.id]["turns"] = []
-
-                # A single turn is a group of user messages and bot responses right after
-                turn = {"user_messages": [], "bot_messages": []}
-
-                turns.append(turn)
-
-                turn["user_messages"].append(user_message)
-
-                logger.debug(
-                    f"{message.author.name} ({message.author.id}): {message.content}{' (replying `{}`)'.format(reference_message) if reference_message is not None else ''}"
-                )
-
-                # Merge turns into a single prompt (don't forget EOS token)
-                # prompt = ""
-                messages = [
-                    # {
-                    #     "role": "system",
-                    #     "content": "You are a Discord user named Fukuya, who utilises their dry humor to cheer you up. Chat with the users as humanly as possible, by using lowercase or answers questions with silly answers.",
-                    # },
-                ]
-
-                prompt = "Continue writing the following text.\n\n"
-
-                from_index = (
-                    max(len(turns) - max_turns_history - 1, 0)
-                    if max_turns_history >= 0
-                    else 0
-                )
-
-                for turn in turns[from_index:]:
-                    # Each turn begins with user messages
-                    for user_message in turn["user_messages"]:
-                        messages.append(
-                            {"role": "user", "content": clean_text(user_message)}
-                        )
-
-                    for bot_message in turn["bot_messages"]:
-                        messages.append(
-                            {"role": "assistant", "content": clean_text(bot_message)}
-                        )
-
-                prompt += "\n".join(
-                    [
-                        (
-                            m["content"]
-                            if m["role"] == "assistant"
-                            else f"USER: {m['content']}"
-                        )
-                        for m in messages
-                    ]
-                )
-
-                logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
-
-                modified_gen_kwargs = self.generator_kwargs.copy()
-                modified_gen_kwargs["temperature"] = float(
-                    self.chat_data[message.author.id]["temperature"]
-                )
-                modified_gen_kwargs["top_k"] = int(
-                    self.chat_data[message.author.id]["top_k"]
-                )
-                modified_gen_kwargs["top_p"] = float(
-                    self.chat_data[message.author.id]["top_p"]
-                )
-
-                async with message.channel.typing():
-                    # Generate bot messages
-                    bot_messages = generate_responses(
-                        prompt,
-                        self.generation_pipeline,
-                        seed=self.seed,
-                        debug=self.debug,
-                        **modified_gen_kwargs,
-                    )
-
-                    if len(bot_messages) == 1:
-                        bot_message = bot_messages[0]
-                    else:
-                        bot_message = pick_best_response(
-                            prompt, bot_messages, self.ranker_dict, debug=self.debug
-                        )
-
-                    bot_message = bot_message.strip()
-
-                    await asyncio.sleep(5)
-
-                if bot_message != "" or bot_message is not None:
-                    await message.reply(
-                        bot_message.split(": ")[-1], mention_author=False
-                    )
-
-                    turn["bot_messages"].append(bot_message)
-                else:
-                    await message.reply(
-                        "`I'm sorry, I didn't get that.`", mention_author=False
-                    )
-
-                    turn["bot_messages"].append("I'm sorry, I didn't get that.")
-
-                logger.debug(
-                    f"{self.user.name} (replying to {message.author.name}): {bot_message.split(': ')[-1]}"
-                )
+                while len(bot_message.split(": ")[-1].split()) < 20:
+                    bot_message = self.send_message(message, max_turns_history)
 
                 # if (
                 #     len(bot_message.split()) <= giphy_max_words
@@ -282,12 +278,12 @@ def run(discord_token, **kwargs):
                 return
 
         logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Started their chat]")
-        
+
         if ctx.author.id not in bot.chat_data:
             bot.chat_data[ctx.author.id] = {"turns": []}
-        
+
         bot.chat_data[ctx.author.id]["enabled"] = True
-        
+
         await ctx.reply(
             "Just start texting me. "
             "If I'm getting annoying, type `!reset`. "
@@ -301,8 +297,10 @@ def run(discord_token, **kwargs):
         if ctx.author.id in bot.chat_data:
             if bot.chat_data[ctx.author.id]["enabled"] == True:
                 bot.chat_data[ctx.author.id]["enabled"] = False
-                await ctx.reply("I'm done. Use `!start` when you wanna talk with me again.")
-            
+                await ctx.reply(
+                    "I'm done. Use `!start` when you wanna talk with me again."
+                )
+
     @bot.command()
     async def gtfo(ctx):
         await ctx.reply("Ok lol")
@@ -329,9 +327,11 @@ def run(discord_token, **kwargs):
                     try:
                         value = float(value)
                     except ValueError:
-                        await ctx.reply("You can only have floats in your values buddy.")
+                        await ctx.reply(
+                            "You can only have floats in your values buddy."
+                        )
                         return
-                    
+
                 bot.chat_data[ctx.author.id][key] = value
 
         logger.debug(
@@ -361,7 +361,7 @@ def run(discord_token, **kwargs):
         logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Saved their chat data]")
         with open(bot.data_file.replace("{USER_ID}", str(ctx.author.id)), "wb") as f:
             pickle.dump(bot.chat_data[ctx.author.id], f)
-            
+
         await ctx.reply("Your chat data has been saved.")
 
     bot.run(discord_token)
