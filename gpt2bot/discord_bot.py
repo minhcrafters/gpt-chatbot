@@ -297,6 +297,7 @@ def run(discord_token, **kwargs):
 
     @bot.command(alias=["end"])
     async def stop(ctx):
+        """Stop the dialogue when user sends the command "!stop"."""
         if ctx.author.id in bot.chat_data:
             if bot.chat_data[ctx.author.id]["enabled"] == True:
                 bot.chat_data[ctx.author.id]["enabled"] = False
@@ -309,7 +310,7 @@ def run(discord_token, **kwargs):
 
     @bot.command()
     async def params(ctx, key: str, value):
-        """Set the dialogue parameters when user sends the command "!set"."""
+        """Set the dialogue parameters when user sends the command "!params"."""
         if ctx.author.id not in bot.chat_data:
             await ctx.reply("I'm not chatting. Use !start to start.")
             return
