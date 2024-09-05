@@ -454,7 +454,7 @@ def build_ranker_dict(**kwargs):
 
 def generate_scores(prompt, responses, pipeline, **kwargs):
     """Generate scores using a text classification pipeline."""
-    responses = [prompt + "\n" + response for response in responses]
+    responses = [prompt + response for response in responses]
 
     outputs = pipeline(responses, **kwargs)
     return [output["score"] for output in outputs]
