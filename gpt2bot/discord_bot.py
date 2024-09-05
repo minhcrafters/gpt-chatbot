@@ -188,7 +188,8 @@ class DiscordBot(commands.Bot):
 
             if not is_question(bot_message):
                 logger.debug("Bot message too short, continuing generation...")
-                curr_message += 1
+                
+            curr_message += 1
 
     async def on_message(self, message: Message):
         # Don't respond to messages from the bot itself
