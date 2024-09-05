@@ -277,13 +277,13 @@ def run(discord_token, **kwargs):
     async def start(ctx):
         """Start a new dialogue when user sends the command "!start"."""
         if ctx.author.id in bot.chat_data:
-            await ctx.send("I'm already chatting. Use !reset to start a new one.")
+            await ctx.reply("I'm already chatting. Use !reset to start a new one.")
             return
 
         logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Started their chat]")
         bot.chat_data[ctx.author.id] = {"turns": []}
         bot.chat_data[ctx.author.id]["enabled"] = True
-        await ctx.send(
+        await ctx.reply(
             "Just start texting me. "
             "If I'm getting annoying, type `!reset`. "
             "Make sure to send no more than one message per turn. "
@@ -300,7 +300,7 @@ def run(discord_token, **kwargs):
     async def params(ctx, key: str, value):
         """Set the dialogue parameters when user sends the command "!set"."""
         if ctx.author.id not in bot.chat_data:
-            await ctx.send("I'm not chatting. Use !start to start.")
+            await ctx.reply("I'm not chatting. Use !start to start.")
             return
 
         available_options = ["temperature", "top_k", "top_p"]
@@ -308,11 +308,18 @@ def run(discord_token, **kwargs):
         key = key.lower()
 
         if key not in available_options:
-            await ctx.send(f"Available options: `{', '.join(available_options)}`")
+            await ctx.reply(f"Available options: `{', '.join(available_options)}`")
             return
 
         for k, v in kwargs.items():
             if k != "turns":
+                if type(value) != float:
+                    try:
+                        value = float(value)
+                    except ValueError:
+                        await ctx.reply("You can only have floats in your values buddy.")
+                        return
+                    
                 bot.chat_data[ctx.author.id][key] = value
 
         logger.debug(
