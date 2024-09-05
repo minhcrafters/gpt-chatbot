@@ -137,10 +137,10 @@ class DiscordBot(commands.Bot):
         modified_gen_kwargs["top_k"] = int(self.chat_data[message.author.id]["top_k"])
         modified_gen_kwargs["top_p"] = float(self.chat_data[message.author.id]["top_p"])
 
-        max_messages_per_turn = self.chatbot_params.get("max_messages_per_turn", 5)
+        max_messages_per_turn = self.chatbot_params.get("max_messages_per_turn", 2)
 
         curr_message = 0
-        while curr_message < max_messages_per_turn + 1:
+        while curr_message < max_messages_per_turn:
             bot_message = ""
             
             logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
