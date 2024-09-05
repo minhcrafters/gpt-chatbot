@@ -47,11 +47,12 @@ def run(**kwargs):
     generation_pipeline = load_pipeline(
         "text2text-generation", device=device, **generation_pipeline_kwargs
     )
-    # ranker_dict = build_ranker_dict(
-    #     device=device, **prior_ranker_weights, **cond_ranker_weights
-    # )
+    
+    ranker_dict = build_ranker_dict(
+        device=device, **prior_ranker_weights, **cond_ranker_weights
+    )
         
-    ranker_dict = []
+    # ranker_dict = []
 
     # Run the chatbot
     logger.info("Running the console bot...")

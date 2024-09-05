@@ -78,11 +78,12 @@ class DiscordBot(commands.Bot):
         self.generation_pipeline = load_pipeline(
             "text2text-generation", device=device, **generation_pipeline_kwargs
         )
-        # self.ranker_dict = build_ranker_dict(
-        #     device=device, **prior_ranker_weights, **cond_ranker_weights
-        # )
+        
+        self.ranker_dict = build_ranker_dict(
+            device=device, **prior_ranker_weights, **cond_ranker_weights
+        )
 
-        self.ranker_dict = []
+        # self.ranker_dict = []
 
         if continue_after_restart:
             self.chat_data = {}
