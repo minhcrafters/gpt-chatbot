@@ -399,7 +399,7 @@ def build_ranker_dict(**kwargs):
     ranker_dict["bert"] = dict(
         pipeline=load_pipeline(
             "sentiment-analysis",
-            model="DeepPavlov/bert-base-cased-conversational",
+            model="minhcrafters/distilbert-twitter",
             **kwargs,
         ),
         group="prior",
@@ -454,7 +454,7 @@ def build_ranker_dict(**kwargs):
 
 def generate_scores(prompt, responses, pipeline, **kwargs):
     """Generate scores using a text classification pipeline."""
-    responses = [prompt.replace("Continue writing the following text.\n\n", "") + response for response in responses]
+    responses = [prompt + response for response in responses]
 
     outputs = pipeline(responses, **kwargs)
     return [output["score"] for output in outputs]
