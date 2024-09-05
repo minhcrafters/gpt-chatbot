@@ -251,7 +251,7 @@ class DiscordBot(commands.Bot):
                     turn["bot_messages"].append("I'm sorry, I didn't get that.")
 
                 logger.debug(
-                    f"{self.user.name} (replying to {message.author.name}): {bot_message}"
+                    f"{self.user.name} (replying to {message.author.name}): {bot_message.split(": ")[-1]}"
                 )
 
                 # if (
@@ -276,12 +276,12 @@ def run(discord_token, **kwargs):
     @bot.command()
     async def start(ctx):
         """Start a new dialogue when user sends the command "!start"."""
-        if ctx.author.id in bot.chat_data:
+        if ctx.author.id in bot.chat_data and bot.chat_data[ctx.author.id]["enabled"] == True:
             await ctx.reply("I'm already chatting. Use !reset to start a new one.")
             return
 
         logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Started their chat]")
-        bot.chat_data[ctx.author.id] = {"turns": []}
+        # bot.chat_data[ctx.author.id] = {"turns": []}
         bot.chat_data[ctx.author.id]["enabled"] = True
         await ctx.reply(
             "Just start texting me. "
@@ -292,9 +292,14 @@ def run(discord_token, **kwargs):
 
     @bot.command(alias=["end"])
     async def stop(ctx):
-        if ctx.author.id in bot.chat_data:
+        if ctx.author.id in bot.chat_data and bot.chat_data[ctx.author.id]["enabled"] == True:
             bot.chat_data[ctx.author.id]["enabled"] = False
             await ctx.reply("I'm done. Use `!start` when you wanna talk with me again.")
+            
+    @bot.command()
+    async def gtfo(ctx):
+        await ctx.reply("Ok lol")
+        exit()
 
     @bot.command()
     async def params(ctx, key: str, value):
@@ -341,13 +346,15 @@ def run(discord_token, **kwargs):
 
     @bot.command()
     async def save(ctx):
-        """Save the dialogue history when user sends the command "!save"."""
+        """Save the dialogue data when user sends the command "!save"."""
         if ctx.author.id not in bot.chat_data:
             await ctx.send("I'm not chatting. Use !start to start.")
             return
 
-        logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Saved their chat history]")
+        logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Saved their chat data]")
         with open(bot.data_file.replace("{USER_ID}", str(ctx.author.id)), "wb") as f:
             pickle.dump(bot.chat_data[ctx.author.id], f)
+            
+        await ctx.reply("Your chat data has been saved.")
 
     bot.run(discord_token)
