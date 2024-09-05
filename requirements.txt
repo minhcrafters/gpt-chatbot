@@ -4,3 +4,4 @@ torchvision
 torchaudio
 transformers
 discord.py
+nltk

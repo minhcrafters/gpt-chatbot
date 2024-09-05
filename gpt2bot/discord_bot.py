@@ -1,10 +1,8 @@
-from logging import Formatter, Handler
 from discord import Message
 from discord.ext import commands
 from glob import glob
 
 import discord
-import random
 import asyncio
 import os
 import pickle
@@ -17,11 +15,10 @@ from gpt2bot.utils import (
     generate_responses,
     pick_best_response,
     clean_text,
-    Map,
+    is_question,
 )
 
 logger = setup_logger(__name__)
-
 
 class DiscordBot(commands.Bot):
     def __init__(self, command_prefix, **kwargs):
@@ -133,8 +130,6 @@ class DiscordBot(commands.Bot):
             for bot_message in turn["bot_messages"]:
                 prompt += f"{clean_text(bot_message)}\n"
 
-        logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
-
         modified_gen_kwargs = self.generator_kwargs.copy()
         modified_gen_kwargs["temperature"] = float(
             self.chat_data[message.author.id]["temperature"]
@@ -142,11 +137,16 @@ class DiscordBot(commands.Bot):
         modified_gen_kwargs["top_k"] = int(self.chat_data[message.author.id]["top_k"])
         modified_gen_kwargs["top_p"] = float(self.chat_data[message.author.id]["top_p"])
 
-        async with message.channel.typing():
+        max_messages_per_turn = 5
+
+        curr_message = 0
+        while curr_message < max_messages_per_turn:
             bot_message = ""
 
             # Keep generating until the response is at least 20 words long
-            while len(bot_message.split()) < 5:
+            async with message.channel.typing():
+                logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
+
                 bot_messages = generate_responses(
                     prompt,
                     self.generation_pipeline,
@@ -163,24 +163,28 @@ class DiscordBot(commands.Bot):
                     )
 
                 bot_message = bot_message.strip()
+
                 await asyncio.sleep(5)
 
-                if bot_message != "":
-                    # Append the bot's message to the prompt in the desired format
-                    prompt += f"{bot_message}\n"
+            if bot_message != "":
+                # Append the bot's message to the prompt in the desired format
+                prompt += f"{bot_message}\n"
 
-                    await message.reply(bot_message.split(": ")[-1], mention_author=False)
-                    turn["bot_messages"].append(bot_message)
-                else:
-                    await message.reply("`I'm sorry, I didn't get that.`", mention_author=False)
-                    turn["bot_messages"].append("I'm sorry, I didn't get that.")
-
-                logger.debug(
-                    f"{self.user.name} (replying to {message.author.name}): {bot_message.split(': ')[-1]}"
+                await message.reply(bot_message.split(": ")[-1], mention_author=False)
+                turn["bot_messages"].append(bot_message)
+            else:
+                await message.reply(
+                    "`I'm sorry, I didn't get that.`", mention_author=False
                 )
-                
-                if len(bot_message.split()) < 5:
-                    logger.debug("Bot message too short, continuing generation...")
+                turn["bot_messages"].append("I'm sorry, I didn't get that.")
+
+            logger.debug(
+                f"{self.user.name} (replying to {message.author.name}): {bot_message.split(': ')[-1]}"
+            )
+
+            if len(bot_message.split()) < 4 or not is_question(bot_message):
+                logger.debug("Bot message too short, continuing generation...")
+                curr_message += 1
 
     async def on_message(self, message: Message):
         # Don't respond to messages from the bot itself

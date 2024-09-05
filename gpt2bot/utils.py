@@ -4,46 +4,93 @@ import transformers
 import numpy as np
 import random
 import requests
-import importlib
+import nltk
 
 from urllib.parse import urlencode
 from requests.adapters import HTTPAdapter
 from urllib3.response import Retry
 
+nltk.download("nps_chat")
+posts = nltk.corpus.nps_chat.xml_posts()[:10000]
 
-class Map(dict):
-    """
-    Example:
-    m = Map({'first_name': 'Eduardo'}, last_name='Pool', age=24, sports=['Soccer'])
-    """
 
-    def __init__(self, *args, **kwargs):
-        super(Map, self).__init__(*args, **kwargs)
-        for arg in args:
-            if isinstance(arg, dict):
-                for k, v in arg.items():
-                    self[k] = v
+def dialogue_act_features(post):
+    features = {}
+    for word in nltk.word_tokenize(post):
+        features["contains({})".format(word.lower())] = True
+    return features
 
-        if kwargs:
-            for k, v in kwargs.items():
-                self[k] = v
 
-    def __getattr__(self, attr):
-        return self.get(attr)
+featuresets = [(dialogue_act_features(post.text), post.get("class")) for post in posts]
+size = int(len(featuresets) * 0.1)
+train_set, test_set = featuresets[size:], featuresets[:size]
+classifier = nltk.NaiveBayesClassifier.train(train_set)
 
-    def __setattr__(self, key, value):
-        self.__setitem__(key, value)
+question_types = ["whQuestion", "ynQuestion"]
 
-    def __setitem__(self, key, value):
-        super(Map, self).__setitem__(key, value)
-        self.__dict__.update({key: value})
 
-    def __delattr__(self, item):
-        self.__delitem__(item)
+def is_ques_using_nltk(ques):
+    question_type = classifier.classify(dialogue_act_features(ques))
+    return question_type in question_types
 
-    def __delitem__(self, key):
-        super(Map, self).__delitem__(key)
-        del self.__dict__[key]
+
+question_pattern = [
+    "do i",
+    "do you",
+    "what",
+    "who",
+    "is it",
+    "why",
+    "would you",
+    "how",
+    "is there",
+    "are there",
+    "is it so",
+    "is this true",
+    "to know",
+    "is that true",
+    "are we",
+    "am i",
+    "question is",
+    "tell me more",
+    "can i",
+    "can we",
+    "tell me",
+    "can you explain",
+    "question",
+    "answer",
+    "questions",
+    "answers",
+    "ask",
+]
+
+helping_verbs = ["is", "am", "can", "are", "do", "does"]
+
+
+# check with custom pipeline if still this is a question mark it as a question
+def is_question(question: str):
+    question = question.lower().strip()
+    if not is_ques_using_nltk(question):
+        is_ques = False
+        # check if any of pattern exist in sentence
+        for pattern in question_pattern:
+            is_ques = pattern in question
+            if is_ques:
+                break
+
+        # there could be multiple sentences so divide the sentence
+        sentence_arr = question.split(".")
+        for sentence in sentence_arr:
+            if len(sentence.strip()):
+                # if question ends with ? or start with any helping verb
+                # word_tokenize will strip by default
+                first_word = nltk.word_tokenize(sentence)[0]
+                if sentence.endswith("?") or first_word in helping_verbs:
+                    is_ques = True
+                    break
+        return is_ques
+    else:
+        return True
 
 
 class CustomFormatter(logging.Formatter):
@@ -418,10 +465,10 @@ def pick_best_response(prompt, responses, ranker_dict: dict, debug=False):
         scores = np.array(
             generate_scores(prompt, responses, ranker_dict["bert"]["pipeline"])
         )
-        
+
         if debug:
             logger.debug("BERT scores: {}".format(scores))
-            
+
         return responses[np.argmax(scores)]
     else:
         raise ValueError("None is happened")
