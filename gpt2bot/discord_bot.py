@@ -179,7 +179,7 @@ class DiscordBot(commands.Bot):
                     f"{self.user.name} (replying to {message.author.name}): {bot_message.split(': ')[-1]}"
                 )
                 
-                if bot_message.split() < 5:
+                if len(bot_message.split()) < 5:
                     logger.debug("Bot message too short, continuing generation...")
 
     async def on_message(self, message: Message):
