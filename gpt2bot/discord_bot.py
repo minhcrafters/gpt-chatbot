@@ -108,34 +108,16 @@ class DiscordBot(commands.Bot):
         else:
             user_message = message.content
 
-        # return_gif = False
-        # if "@gif" in user_message:
-        #     # Return gif
-        #     return_gif = True
-        #     user_message = user_message.replace("@gif", "").strip()
-
         if max_turns_history == 0:
             self.chat_data[message.author.id]["turns"] = []
 
-        # A single turn is a group of user messages and bot responses right after
         turn = {"user_messages": [], "bot_messages": []}
-
         turns.append(turn)
-
         turn["user_messages"].append(user_message)
 
         logger.debug(
             f"{message.author.name} ({message.author.id}): {message.content}{' (replying `{}`)'.format(reference_message) if reference_message is not None else ''}"
         )
-
-        # Merge turns into a single prompt (don't forget EOS token)
-        # prompt = ""
-        messages = [
-            # {
-            #     "role": "system",
-            #     "content": "You are a Discord user named Fukuya, who utilises their dry humor to cheer you up. Chat with the users as humanly as possible, by using lowercase or answers questions with silly answers.",
-            # },
-        ]
 
         prompt = "Continue writing the following text.\n\n"
 
@@ -143,23 +125,13 @@ class DiscordBot(commands.Bot):
             max(len(turns) - max_turns_history - 1, 0) if max_turns_history >= 0 else 0
         )
 
+        # Initialize the conversation with user and bot messages
         for turn in turns[from_index:]:
-            # Each turn begins with user messages
             for user_message in turn["user_messages"]:
-                messages.append({"role": "user", "content": clean_text(user_message)})
+                prompt += f"USER: {clean_text(user_message)}\n"
 
             for bot_message in turn["bot_messages"]:
-                if bot_message is not None:
-                    messages.append(
-                        {"role": "assistant", "content": clean_text(bot_message)}
-                    )
-
-        prompt += "\n".join(
-            [
-                (m["content"] if m["role"] == "assistant" else f"USER: {m['content']}")
-                for m in messages
-            ]
-        )
+                prompt += f"{clean_text(bot_message)}\n"
 
         logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
 
@@ -171,45 +143,44 @@ class DiscordBot(commands.Bot):
         modified_gen_kwargs["top_p"] = float(self.chat_data[message.author.id]["top_p"])
 
         async with message.channel.typing():
-            # Generate bot messages
-            bot_messages = generate_responses(
-                prompt,
-                self.generation_pipeline,
-                seed=self.seed,
-                debug=self.debug,
-                **modified_gen_kwargs,
-            )
+            bot_message = ""
 
-            if len(bot_messages) == 1:
-                bot_message = bot_messages[0]
-            else:
-                bot_message = pick_best_response(
-                    prompt, bot_messages, self.ranker_dict, debug=self.debug
+            # Keep generating until the response is at least 20 words long
+            while len(bot_message.split()) < 5:
+                bot_messages = generate_responses(
+                    prompt,
+                    self.generation_pipeline,
+                    seed=self.seed,
+                    debug=self.debug,
+                    **modified_gen_kwargs,
                 )
 
-            bot_message = bot_message.strip()
+                if len(bot_messages) == 1:
+                    bot_message = bot_messages[0]
+                else:
+                    bot_message = pick_best_response(
+                        prompt, bot_messages, self.ranker_dict, debug=self.debug
+                    )
 
-            if len(turns[-1]["bot_messages"]) > 0:
-                last_message = turns[-1]["bot_messages"][-1]
-                if bot_message == last_message:
-                    bot_message = None
+                bot_message = bot_message.strip()
+                await asyncio.sleep(5)
 
-            await asyncio.sleep(5)
+                if bot_message != "":
+                    # Append the bot's message to the prompt in the desired format
+                    prompt += f"{bot_message}\n"
 
-        if bot_message != "" or bot_message is not None:
-            await message.reply(bot_message.split(": ")[-1], mention_author=False)
+                    await message.reply(bot_message.split(": ")[-1], mention_author=False)
+                    turn["bot_messages"].append(bot_message)
+                else:
+                    await message.reply("`I'm sorry, I didn't get that.`", mention_author=False)
+                    turn["bot_messages"].append("I'm sorry, I didn't get that.")
 
-            turn["bot_messages"].append(bot_message)
-        else:
-            await message.reply("`I'm sorry, I didn't get that.`", mention_author=False)
-
-            turn["bot_messages"].append("I'm sorry, I didn't get that.")
-
-        logger.debug(
-            f"{self.user.name} (replying to {message.author.name}): {bot_message.split(': ')[-1]}"
-        )
-        
-        return bot_message
+                logger.debug(
+                    f"{self.user.name} (replying to {message.author.name}): {bot_message.split(': ')[-1]}"
+                )
+                
+                if bot_message.split() < 5:
+                    logger.debug("Bot message too short, continuing generation...")
 
     async def on_message(self, message: Message):
         # Don't respond to messages from the bot itself
@@ -245,11 +216,7 @@ class DiscordBot(commands.Bot):
                 if "turns" not in self.chat_data[message.author.id]:
                     self.chat_data[message.author.id]["turns"] = []
 
-                bot_message = await self.send_message(message, max_turns_history)
-
-                while len(bot_message.split(": ")[-1].split()) < 20:
-                    logger.debug("Bot message too short. Retrying...")
-                    bot_message = await self.send_message(message, max_turns_history)
+                await self.send_message(message, max_turns_history)
 
                 # if (
                 #     len(bot_message.split()) <= giphy_max_words
