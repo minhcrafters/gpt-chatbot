@@ -276,9 +276,10 @@ def run(discord_token, **kwargs):
     @bot.command()
     async def start(ctx):
         """Start a new dialogue when user sends the command "!start"."""
-        if ctx.author.id in bot.chat_data and bot.chat_data[ctx.author.id]["enabled"] == True:
-            await ctx.reply("I'm already chatting. Use !reset to start a new one.")
-            return
+        if ctx.author.id in bot.chat_data:
+            if bot.chat_data[ctx.author.id]["enabled"] == True:
+                await ctx.reply("I'm already chatting. Use !reset to start a new one.")
+                return
 
         logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Started their chat]")
         # bot.chat_data[ctx.author.id] = {"turns": []}
@@ -292,9 +293,10 @@ def run(discord_token, **kwargs):
 
     @bot.command(alias=["end"])
     async def stop(ctx):
-        if ctx.author.id in bot.chat_data and bot.chat_data[ctx.author.id]["enabled"] == True:
-            bot.chat_data[ctx.author.id]["enabled"] = False
-            await ctx.reply("I'm done. Use `!start` when you wanna talk with me again.")
+        if ctx.author.id in bot.chat_data:
+            if bot.chat_data[ctx.author.id]["enabled"] == True:
+                bot.chat_data[ctx.author.id]["enabled"] = False
+                await ctx.reply("I'm done. Use `!start` when you wanna talk with me again.")
             
     @bot.command()
     async def gtfo(ctx):
