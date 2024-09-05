@@ -137,16 +137,15 @@ class DiscordBot(commands.Bot):
         modified_gen_kwargs["top_k"] = int(self.chat_data[message.author.id]["top_k"])
         modified_gen_kwargs["top_p"] = float(self.chat_data[message.author.id]["top_p"])
 
-        max_messages_per_turn = 5
+        max_messages_per_turn = self.chatbot_params.get("max_messages_per_turn", 5)
 
         curr_message = 0
         while curr_message < max_messages_per_turn + 1:
             bot_message = ""
+            
+            logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
 
-            # Keep generating until the response is at least 20 words long
             async with message.channel.typing():
-                logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
-
                 bot_messages = generate_responses(
                     prompt,
                     self.generation_pipeline,
@@ -170,8 +169,9 @@ class DiscordBot(commands.Bot):
                 # Append the bot's message to the prompt in the desired format
                 prompt += f"{bot_message}\n"
                 
+                logger.debug(len(turn["user_messages"]))
+                
                 if len(turn["user_messages"]) > 0:
-                    logger.debug(len(turn["user_messages"]))
                     await message.reply(bot_message.split(": ")[-1], mention_author=False)
                     turn["bot_messages"].append(bot_message)
                 else:
@@ -181,7 +181,7 @@ class DiscordBot(commands.Bot):
                 await message.reply(
                     "`I'm sorry, I didn't get that.`", mention_author=False
                 )
-                turn["bot_messages"].append("I'm sorry, I didn't get that.")
+                # turn["bot_messages"].append("I'm sorry, I didn't get that.\n")
 
             logger.debug(
                 f"{self.user.name} (replying to {message.author.name}): {bot_message.split(': ')[-1]}"
