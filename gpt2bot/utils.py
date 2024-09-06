@@ -414,8 +414,11 @@ def generate_responses(prompt, model, tokenizer, seed=None, debug=False, **kwarg
     ).to("cuda")
 
     # outputs = pipeline(prompt, **kwargs)
+    
+    modified_kwargs = kwargs.copy()
+    modified_kwargs.pop("clean_up_tokenization_spaces")
 
-    outputs = model.generate(**inputs, **kwargs)
+    outputs = model.generate(**inputs, **modified_kwargs)
     outputs = tokenizer.batch_decode(outputs)
 
     responses = list(map(lambda x: clean_text(x), outputs))
