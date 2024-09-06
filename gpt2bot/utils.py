@@ -272,6 +272,7 @@ def parse_config(config_path):
             model=config.get("generation_pipeline_kwargs", "model"),
             config=config.get("generation_pipeline_kwargs", "config"),
             tokenizer=config.get("generation_pipeline_kwargs", "tokenizer"),
+            gguf_file=config.get("generation_pipeline_kwargs", "gguf_file"),
             framework=config.get("generation_pipeline_kwargs", "framework"),
         ),
         generator_kwargs=dict(
