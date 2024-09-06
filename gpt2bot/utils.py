@@ -402,6 +402,7 @@ def build_ranker_dict(**kwargs):
             model="minhcrafters/distilbert-twitter",
             **kwargs,
         ),
+        weight=0.7,
         group="prior",
     )
 
@@ -464,17 +465,17 @@ def pick_best_response(prompt, responses, ranker_dict: dict, debug=False):
     """Pick the best response according to the weighted average of scores."""
     if len(ranker_dict) == 0:
         return random.choice(responses)
-    elif ranker_dict.get("bert", None) is not None:
-        scores = np.array(
-            generate_scores(prompt, responses, ranker_dict["bert"]["pipeline"])
-        )
+    # elif ranker_dict.get("bert", None) is not None:
+    #     scores = np.array(
+    #         generate_scores(prompt, responses, ranker_dict["bert"]["pipeline"])
+    #     )
 
-        if debug:
-            logger.debug("BERT scores: {}".format(scores))
+    #     if debug:
+    #         logger.debug("BERT scores: {}".format(scores))
 
-        return responses[np.argmax(scores)]
-    else:
-        raise ValueError("None is happened")
+    #     return responses[np.argmax(scores)]
+    # else:
+    #     raise ValueError("None is happened")
 
     def _get_wa_group_scores(group_name):
         group_scores = 0

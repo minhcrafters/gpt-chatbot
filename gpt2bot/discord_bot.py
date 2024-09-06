@@ -74,7 +74,7 @@ class DiscordBot(commands.Bot):
 
         # Prepare the pipelines
         self.generation_pipeline = load_pipeline(
-            "text2text-generation", device=device, **generation_pipeline_kwargs
+            "text-generation", device=device, **generation_pipeline_kwargs
         )
 
         self.ranker_dict = build_ranker_dict(
