@@ -260,8 +260,7 @@ def parse_config(config_path):
 
     # Read the config
     config = configparser.ConfigParser(allow_no_value=True)
-    with open(config_path) as f:
-        config.read_file(f)
+    config.read(config_path)
 
     return dict(
         general_params=dict(
@@ -277,6 +276,7 @@ def parse_config(config_path):
         ),
         generator_kwargs=dict(
             max_length=parse_optional_int(config, "generator_kwargs", "max_length"),
+            max_new_tokens=parse_optional_int(config, "generator_kwargs", "max_new_tokens"),
             min_length=parse_optional_int(config, "generator_kwargs", "min_length"),
             do_sample=parse_optional_bool(config, "generator_kwargs", "do_sample"),
             early_stopping=parse_optional_bool(
