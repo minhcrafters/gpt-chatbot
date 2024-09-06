@@ -415,7 +415,7 @@ def generate_responses(prompt, model, tokenizer, seed=None, debug=False, **kwarg
     # outputs = pipeline(prompt, **kwargs)
 
     outputs = model.generate(**inputs, max_new_tokens=64, use_cache=True)
-    tokenizer.batch_decode(outputs)
+    outputs = tokenizer.batch_decode(outputs)
 
     responses = list(map(lambda x: clean_text(x), outputs))
 
