@@ -275,7 +275,7 @@ def parse_config(config_path):
             framework=config.get("generation_pipeline_kwargs", "framework"),
         ),
         generator_kwargs=dict(
-            max_length=parse_optional_int(config, "generator_kwargs", "max_length"),
+            # max_length=parse_optional_int(config, "generator_kwargs", "max_length"),
             max_new_tokens=parse_optional_int(config, "generator_kwargs", "max_new_tokens"),
             min_length=parse_optional_int(config, "generator_kwargs", "min_length"),
             do_sample=parse_optional_bool(config, "generator_kwargs", "do_sample"),
