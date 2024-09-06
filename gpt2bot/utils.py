@@ -378,6 +378,7 @@ def load_model(**kwargs):
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=kwargs.get("model"),
         max_seq_length=2048,
+        device_map='cuda'
     )
 
     FastLanguageModel.for_inference(model)
