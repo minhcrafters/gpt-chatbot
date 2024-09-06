@@ -10,7 +10,7 @@ import pickle
 from gpt2bot.utils import (
     setup_logger,
     translate_message_to_gif,
-    load_pipeline,
+    load_model,
     build_ranker_dict,
     generate_responses,
     pick_best_response,
@@ -73,8 +73,8 @@ class DiscordBot(commands.Bot):
         self.debug = debug
 
         # Prepare the pipelines
-        self.generation_pipeline = load_pipeline(
-            "text-generation", device=device, **generation_pipeline_kwargs
+        self.generation_pipeline = load_model(
+            device=device, **generation_pipeline_kwargs
         )
 
         self.ranker_dict = build_ranker_dict(
@@ -149,7 +149,8 @@ class DiscordBot(commands.Bot):
             async with message.channel.typing():
                 bot_messages = generate_responses(
                     prompt,
-                    self.generation_pipeline,
+                    self.generation_pipeline[0],
+                    self.generation_pipeline[1],
                     seed=self.seed,
                     debug=self.debug,
                     **modified_gen_kwargs,

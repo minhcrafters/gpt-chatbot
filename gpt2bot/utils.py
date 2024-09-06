@@ -9,6 +9,7 @@ import nltk
 from urllib.parse import urlencode
 from requests.adapters import HTTPAdapter
 from urllib3.response import Retry
+from unsloth import FastLanguageModel
 
 nltk.download("nps_chat")
 nltk.download("punkt")
@@ -277,7 +278,9 @@ def parse_config(config_path):
         ),
         generator_kwargs=dict(
             # max_length=parse_optional_int(config, "generator_kwargs", "max_length"),
-            max_new_tokens=parse_optional_int(config, "generator_kwargs", "max_new_tokens"),
+            max_new_tokens=parse_optional_int(
+                config, "generator_kwargs", "max_new_tokens"
+            ),
             min_length=parse_optional_int(config, "generator_kwargs", "min_length"),
             do_sample=parse_optional_bool(config, "generator_kwargs", "do_sample"),
             early_stopping=parse_optional_bool(
@@ -366,7 +369,20 @@ def load_pipeline(task: str, **kwargs):
         f"Loading model '{kwargs.get('model')}' for task '{task.split('.')[-1]}'..."
     )
 
+    # model = transformers.AutoModel.from_pretrained(kwargs.get("model"))
+
     return transformers.pipeline(task, **kwargs)
+
+
+def load_model(**kwargs):
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_name=kwargs.get("model"),
+        max_seq_length=2048,
+    )
+
+    FastLanguageModel.for_inference(model)
+
+    return model, tokenizer
 
 
 def clean_text(txt: str):
@@ -374,15 +390,38 @@ def clean_text(txt: str):
     return " ".join(txt.strip().split())
 
 
-def generate_responses(prompt, pipeline, seed=None, debug=False, **kwargs):
+def generate_responses(prompt, model, tokenizer, seed=None, debug=False, **kwargs):
     """Generate responses using a text generation pipeline."""
     if seed is not None:
         set_seed(seed)
 
-    outputs = pipeline(prompt, **kwargs)
-    responses = list(map(lambda x: clean_text(x["generated_text"]), outputs))
+    base_prompt = """Respond naturally to the following conversation in a friendly, casual manner. Maintain the flow of the chat, understanding the user's intent and providing relevant responses. Pay attention to context from previous exchanges to keep the conversation engaging and coherent.
+### Input:
+{}
+
+### Response:
+{}"""
+
+    inputs = tokenizer(
+        [
+            base_prompt.format(
+                prompt,  # input
+                "",  # output - leave this blank for generation!
+            )
+        ],
+        return_tensors="pt",
+    ).to("cuda")
+
+    # outputs = pipeline(prompt, **kwargs)
+
+    outputs = model.generate(**inputs, max_new_tokens=64, use_cache=True)
+    tokenizer.batch_decode(outputs)
+
+    responses = list(map(lambda x: clean_text(x), outputs))
+
     if debug:
         logger.debug("Generated responses: {}".format(responses))
+
     return responses
 
 
