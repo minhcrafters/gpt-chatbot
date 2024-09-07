@@ -146,7 +146,7 @@ class DiscordBot(commands.Bot):
         while curr_message < max_messages_per_turn:
             bot_message = ""
 
-            logger.debug("Messages: {}".format("\n".join([f"{m['from']}: {m["value"]}" for m in messages])))
+            logger.debug("Messages: {}".format("\n".join([f"{m['from']}: {m['value']}" for m in messages])))
 
             async with message.channel.typing():
                 bot_messages = generate_responses(
