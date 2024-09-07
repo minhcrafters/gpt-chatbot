@@ -9,7 +9,7 @@ import nltk
 from urllib.parse import urlencode
 from requests.adapters import HTTPAdapter
 from urllib3.response import Retry
-from unsloth import FastLanguageModel
+from unsloth import FastLanguageModel, get_chat_template
 
 nltk.download("nps_chat")
 nltk.download("punkt")
@@ -393,37 +393,39 @@ def clean_text(txt: str):
     return " ".join(txt.strip().split())
 
 
-def generate_responses(prompt, model, tokenizer, seed=None, debug=False, **kwargs):
+def generate_responses(messages, model, tokenizer, seed=None, debug=False, **kwargs):
     """Generate responses using a text generation pipeline."""
     if seed is not None:
         set_seed(seed)
 
-    base_prompt = """Respond naturally to the following conversation in a friendly, casual manner. Maintain the flow of the chat, understanding the user's intent and providing relevant responses. Pay attention to context from previous exchanges to keep the conversation engaging and coherent.
-### Input:
-{}
+    tokenizer = get_chat_template(
+        tokenizer,
+        chat_template="llama-3",
+        mapping={
+            "role": "from",
+            "content": "value",
+            "user": "human",
+            "assistant": "gpt",
+        },
+    )
 
-### Response:
-{}"""
-
-    prompt = base_prompt.format(prompt, "")
-
-    inputs = tokenizer(
-        [prompt],
-        return_tensors="pt",
+    prompt = tokenizer.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True,
     ).to("cuda")
 
+    inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
     # outputs = pipeline(prompt, **kwargs)
 
     outputs = model.generate(
-        **inputs, max_new_tokens=kwargs.get("max_new_tokens"), use_cache=True
+        input_ids=inputs, max_new_tokens=kwargs.get("max_new_tokens"), use_cache=True
     )
     outputs = tokenizer.batch_decode(outputs)
 
     responses = list(
         map(
-            lambda x: clean_text(
-                x[len(prompt) :][: -len(tokenizer.eos_token)]
-            )[len("### Response: ") :],
+            lambda x: clean_text(x[len(prompt) :][: -len(tokenizer.eos_token)]),
             outputs,
         )
     )

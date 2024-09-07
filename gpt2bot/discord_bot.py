@@ -117,7 +117,7 @@ class DiscordBot(commands.Bot):
             f"{message.author.name} ({message.author.id}): {message.content}{' (replying `{}`)'.format(reference_message) if reference_message is not None else ''}"
         )
 
-        prompt = ""
+        messages = []
 
         from_index = (
             max(len(turns) - max_turns_history - 1, 0) if max_turns_history >= 0 else 0
@@ -126,10 +126,12 @@ class DiscordBot(commands.Bot):
         # Initialize the conversation with user and bot messages
         for turn in turns[from_index:]:
             for user_message in turn["user_messages"]:
-                prompt += f"USER: {clean_text(user_message)}\n"
+                # prompt += f"USER: {clean_text(user_message)}\n"
+                messages.append({"from": "human", "value": clean_text(user_message)})
 
             for bot_message in turn["bot_messages"]:
-                prompt += f"{clean_text(bot_message)}\n"
+                # prompt += f"{clean_text(bot_message)}\n"
+                messages.append({"from": "gpt", "value": clean_text(bot_message)})
 
         modified_gen_kwargs = self.generator_kwargs.copy()
         modified_gen_kwargs["temperature"] = float(
@@ -144,11 +146,11 @@ class DiscordBot(commands.Bot):
         while curr_message < max_messages_per_turn:
             bot_message = ""
 
-            logger.debug("Prompt: {}".format(prompt.replace("\n", " | ")))
+            logger.debug("Messages: {}".format("\n".join([f"{m['from']}: {m["value"]}" for m in messages])))
 
             async with message.channel.typing():
                 bot_messages = generate_responses(
-                    prompt,
+                    messages,
                     self.generation_pipeline[0],
                     self.generation_pipeline[1],
                     seed=self.seed,
@@ -160,7 +162,7 @@ class DiscordBot(commands.Bot):
                     bot_message = bot_messages[0]
                 else:
                     bot_message = pick_best_response(
-                        prompt, bot_messages, self.ranker_dict, debug=self.debug
+                        messages, bot_messages, self.ranker_dict, debug=self.debug
                     )
 
                 bot_message = bot_message.strip()
@@ -170,8 +172,8 @@ class DiscordBot(commands.Bot):
             if bot_message != "":
                 # Append the bot's message to the prompt in the desired format
 
-                if prompt.split("\n")[-2].startswith("USER"):
-                    prompt += f"{bot_message}\n"
+                if messages[-1]["from"] == "human":
+                    messages.append({"from": "gpt", "value": clean_text(bot_message)})
 
                     await message.reply(
                         bot_message.split(": ")[-1], mention_author=False
