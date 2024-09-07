@@ -409,26 +409,27 @@ def generate_responses(messages, model, tokenizer, seed=None, debug=False, **kwa
         },
     )
 
-    prompt = tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True
+    inputs = tokenizer.apply_chat_template(
+        messages, tokenize=True, add_generation_prompt=True
     )
 
-    inputs = tokenizer([prompt], return_tensors="pt").to("cuda")
+    # inputs = tokenizer([prompt], return_tensors="pt").to("cuda")
     # outputs = pipeline(prompt, **kwargs)
 
     outputs = model.generate(
-        **inputs, max_new_tokens=kwargs.get("max_new_tokens"), use_cache=True
+        input_ids=inputs, max_new_tokens=kwargs.get("max_new_tokens"), use_cache=True
     )
+    
     outputs = tokenizer.batch_decode(outputs)
 
-    responses = list(
-        map(
-            lambda x: clean_text(x[len(prompt) :][: -len(tokenizer.eos_token)]),
-            outputs,
+    responses = [
+        clean_text(
+            output.split("<|start_header_id|>assistant<|end_header_id|>")[-1].split(
+                tokenizer.eos_token
+            )[0]
         )
-    )
+        for output in outputs
+    ]
 
     if debug:
         logger.debug("Generated responses: {}".format(responses))
