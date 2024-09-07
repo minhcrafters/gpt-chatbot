@@ -413,7 +413,7 @@ def generate_responses(messages, model, tokenizer, seed=None, debug=False, **kwa
         messages,
         tokenize=False,
         add_generation_prompt=True,
-    ).to("cuda")
+    )
 
     inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
     # outputs = pipeline(prompt, **kwargs)
