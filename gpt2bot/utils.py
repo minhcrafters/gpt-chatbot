@@ -378,7 +378,9 @@ def load_model(**kwargs):
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=kwargs.get("model"),
         max_seq_length=2048,
-        device_map='cuda'
+        device_map="cuda",
+        dtype=None,
+        load_in_4bit=False,
     )
 
     FastLanguageModel.for_inference(model)
@@ -403,25 +405,21 @@ def generate_responses(prompt, model, tokenizer, seed=None, debug=False, **kwarg
 ### Response:
 {}"""
 
+    prompt = base_prompt.format(prompt, "")
+
     inputs = tokenizer(
-        [
-            base_prompt.format(
-                prompt,  # input
-                "",  # output - leave this blank for generation!
-            )
-        ],
+        [prompt],
         return_tensors="pt",
     ).to("cuda")
 
     # outputs = pipeline(prompt, **kwargs)
-    
-    modified_kwargs = kwargs.copy()
-    modified_kwargs.pop("clean_up_tokenization_spaces")
 
-    outputs = model.generate(**inputs, **modified_kwargs)
+    outputs = model.generate(
+        **inputs, max_new_tokens=kwargs.get("max_new_tokens"), use_cache=True
+    )
     outputs = tokenizer.batch_decode(outputs)
 
-    responses = list(map(lambda x: clean_text(x), outputs))
+    responses = list(map(lambda x: clean_text(x[len(prompt) :]), outputs))
 
     if debug:
         logger.debug("Generated responses: {}".format(responses))
