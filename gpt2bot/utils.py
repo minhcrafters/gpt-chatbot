@@ -421,7 +421,10 @@ def generate_responses(prompt, model, tokenizer, seed=None, debug=False, **kwarg
 
     responses = list(
         map(
-            lambda x: clean_text(x[len(prompt) :][: -len(tokenizer.eos_token)]), outputs
+            lambda x: clean_text(
+                x[len(prompt) :][len("### Response: ") :][: -len(tokenizer.eos_token)]
+            ),
+            outputs,
         )
     )
 
