@@ -234,22 +234,22 @@ def set_seed(seed):
 
 
 def parse_optional_int(config, section, option):
-    value = config.get(section, option)
+    value = config.get(section, option, fallback=None)
     return int(value) if value is not None else None
 
 
 def parse_optional_float(config, section, option):
-    value = config.get(section, option)
+    value = config.get(section, option, fallback=None)
     return float(value) if value is not None else None
 
 
 def parse_optional_bool(config, section, option):
-    value = config.get(section, option)
+    value = config.get(section, option, fallback=None)
     return value.lower() in ("yes", "true", "t", "1") if value is not None else None
 
 
 def parse_optional_int_list(config, section, option):
-    value = config.get(section, option)
+    value = config.get(section, option, fallback=None)
     return (
         list(map(int, value.replace(" ", "").split(","))) if value is not None else None
     )
@@ -419,7 +419,11 @@ def generate_responses(prompt, model, tokenizer, seed=None, debug=False, **kwarg
     )
     outputs = tokenizer.batch_decode(outputs)
 
-    responses = list(map(lambda x: clean_text(x[len(prompt) :]), outputs))
+    responses = list(
+        map(
+            lambda x: clean_text(x[len(prompt) :][: -len(tokenizer.eos_token)]), outputs
+        )
+    )
 
     if debug:
         logger.debug("Generated responses: {}".format(responses))
