@@ -418,6 +418,8 @@ def generate_responses(prompt, model, tokenizer, seed=None, debug=False, **kwarg
         **inputs, max_new_tokens=kwargs.get("max_new_tokens"), use_cache=True
     )
     outputs = tokenizer.batch_decode(outputs)
+    
+    logger.debug(outputs[0][len(prompt) :][: -len(tokenizer.eos_token)])
 
     responses = list(
         map(
