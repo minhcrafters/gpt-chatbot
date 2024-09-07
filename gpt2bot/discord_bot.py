@@ -190,7 +190,7 @@ class DiscordBot(commands.Bot):
                 f"{self.user.name} (replying to {message.author.name}): {bot_message.split(': ')[-1]}"
             )
 
-            if not is_question(bot_message):
+            if not is_question(bot_message) and curr_message < max_messages_per_turn:
                 logger.debug("Bot message too short, continuing generation...")
                 curr_message += 1
             else:
