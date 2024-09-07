@@ -174,16 +174,18 @@ class DiscordBot(commands.Bot):
 
             if bot_message != "":
                 # Append the bot's message to the prompt in the desired format
+                
+                bot_message = bot_message.split(": ")[-1]
 
                 if messages[-1]["from"] == "human":
                     messages.append({"from": "gpt", "value": clean_text(bot_message)})
 
                     await message.reply(
-                        bot_message.split(": ")[-1], mention_author=False
+                        bot_message, mention_author=False
                     )
                     turn["bot_messages"].append(bot_message)
                 else:
-                    await message.channel.send(bot_message.split(": ")[-1])
+                    await message.channel.send(bot_message)
                     turn["bot_messages"].append(bot_message)
             else:
                 await message.reply(
@@ -192,7 +194,7 @@ class DiscordBot(commands.Bot):
                 # turn["bot_messages"].append("I'm sorry, I didn't get that.\n")
 
             logger.debug(
-                f"{self.user.name} (replying to {message.author.name}): {bot_message.split(': ')[-1]}"
+                f"{self.user.name} (replying to {message.author.name}): {bot_message}"
             )
 
             if not is_question(bot_message):
