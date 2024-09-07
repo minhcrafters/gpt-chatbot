@@ -196,12 +196,6 @@ class DiscordBot(commands.Bot):
             )
 
             if not is_question(bot_message):
-                if (
-                    bot_message == "so"
-                    or bot_message == "like"
-                    or bot_message == "ok"
-                ):
-                    max_messages_per_turn += 1
                 # logger.debug("Bot message too short, continuing generation...")
                 curr_message += 1
             else:
