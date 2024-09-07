@@ -180,11 +180,8 @@ class DiscordBot(commands.Bot):
                 if messages[-1]["from"] == "human":
                     messages.append({"from": "gpt", "value": clean_text(bot_message)})
 
-                    await message.reply(bot_message, mention_author=False)
-                    turn["bot_messages"].append(bot_message)
-                else:
-                    await message.channel.send(bot_message)
-                    turn["bot_messages"].append(bot_message)
+                await message.reply(bot_message, mention_author=False)
+                turn["bot_messages"].append(bot_message)
             else:
                 await message.reply(
                     "`I'm sorry, I didn't get that.`", mention_author=False
