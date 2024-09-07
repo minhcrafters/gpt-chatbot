@@ -412,14 +412,14 @@ def generate_responses(messages, model, tokenizer, seed=None, debug=False, **kwa
     prompt = tokenizer.apply_chat_template(
         messages,
         tokenize=False,
-        add_generation_prompt=True,
+        add_generation_prompt=True
     )
 
-    inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
+    inputs = tokenizer([prompt], return_tensors="pt").to("cuda")
     # outputs = pipeline(prompt, **kwargs)
 
     outputs = model.generate(
-        input_ids=inputs, max_new_tokens=kwargs.get("max_new_tokens"), use_cache=True
+        **inputs, max_new_tokens=kwargs.get("max_new_tokens"), use_cache=True
     )
     outputs = tokenizer.batch_decode(outputs)
 
