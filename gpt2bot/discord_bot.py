@@ -147,7 +147,7 @@ class DiscordBot(commands.Bot):
             bot_message = ""
 
             logger.debug(f"Messages of {message.author.name}:")
-            
+
             for m in messages:
                 logger.debug(f"-> {m['from']}: {m['value']}")
 
@@ -174,15 +174,13 @@ class DiscordBot(commands.Bot):
 
             if bot_message != "":
                 # Append the bot's message to the prompt in the desired format
-                
+
                 bot_message = bot_message.split(": ")[-1]
 
                 if messages[-1]["from"] == "human":
                     messages.append({"from": "gpt", "value": clean_text(bot_message)})
 
-                    await message.reply(
-                        bot_message, mention_author=False
-                    )
+                    await message.reply(bot_message, mention_author=False)
                     turn["bot_messages"].append(bot_message)
                 else:
                     await message.channel.send(bot_message)
@@ -198,6 +196,12 @@ class DiscordBot(commands.Bot):
             )
 
             if not is_question(bot_message):
+                if (
+                    bot_message.startswith("so")
+                    or bot_message.startswith("like")
+                    or bot_message.startswith("ok")
+                ):
+                    max_messages_per_turn += 1
                 # logger.debug("Bot message too short, continuing generation...")
                 curr_message += 1
             else:
@@ -298,16 +302,32 @@ def run(discord_token, **kwargs):
     @bot.command()
     async def userinfo(ctx, user: discord.Member = None):
         """Display chat data for user"""
-        
+
         if user is None:
             user = ctx.author
-        
+
         embed = discord.Embed(title=f"Info for user {user.name}", color=0x00BFFF)
-        embed.add_field(name="Chat enabled", value=str(bot.chat_data[user.id]["enabled"]), inline=False)
-        embed.add_field(name="Chat turns", value=str(len(bot.chat_data[user.id]["turns"])), inline=False)
-        embed.add_field(name="Temperature", value=str(bot.chat_data[user.id]["temperature"]), inline=False)
-        embed.add_field(name="Top-k", value=str(bot.chat_data[user.id]["top_k"]), inline=False)
-        embed.add_field(name="Top-p", value=str(bot.chat_data[user.id]["top_p"]), inline=False)
+        embed.add_field(
+            name="Chat enabled",
+            value=str(bot.chat_data[user.id]["enabled"]),
+            inline=False,
+        )
+        embed.add_field(
+            name="Chat turns",
+            value=str(len(bot.chat_data[user.id]["turns"])),
+            inline=False,
+        )
+        embed.add_field(
+            name="Temperature",
+            value=str(bot.chat_data[user.id]["temperature"]),
+            inline=False,
+        )
+        embed.add_field(
+            name="Top-k", value=str(bot.chat_data[user.id]["top_k"]), inline=False
+        )
+        embed.add_field(
+            name="Top-p", value=str(bot.chat_data[user.id]["top_p"]), inline=False
+        )
         embed.set_footer(text="i hate this so much wth")
 
         await ctx.reply(embed=embed)
@@ -350,18 +370,18 @@ def run(discord_token, **kwargs):
     async def reset(ctx):
         """Reset the dialogue history when user sends the command "!reset"."""
         if ctx.author.id not in bot.chat_data:
-            await ctx.send("I'm not chatting. Use !start to start.")
+            await ctx.reply("I'm not chatting. Use !start to start.")
             return
 
         logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Reset their chat]")
         bot.chat_data[ctx.author.id]["turns"] = []
-        await ctx.send("Beep beep!")
+        await ctx.reply("Beep beep!")
 
     @bot.command()
     async def save(ctx):
         """Save the dialogue data when user sends the command "!save"."""
         if ctx.author.id not in bot.chat_data:
-            await ctx.send("I'm not chatting. Use !start to start.")
+            await ctx.reply("I'm not chatting. Use !start to start.")
             return
 
         logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Saved their chat data]")
