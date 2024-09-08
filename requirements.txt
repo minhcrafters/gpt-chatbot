@@ -1,7 +1,14 @@
-tensorflow
 torch
 torchvision
 torchaudio
 transformers
+accelerate
+evaluate
 discord.py
 nltk
+unsloth
+trl
+peft
+bitsandbytes
+triton
+pandas

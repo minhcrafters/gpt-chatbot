@@ -206,6 +206,9 @@ class DiscordBot(commands.Bot):
         # Handle messages
         if not message.content.startswith(self.command_prefix):
             if message.author.id in self.chat_data:
+                if self.chat_data[message.author.id]["channel"] != message.channel.id:
+                    return
+                
                 max_turns_history = self.chatbot_params.get("max_turns_history", 2)
                 # giphy_prob = self.chatbot_params.get("giphy_prob", 0.1)
                 # giphy_max_words = self.chatbot_params.get("giphy_max_words", 10)
@@ -267,6 +270,7 @@ def run(discord_token, **kwargs):
             bot.chat_data[ctx.author.id] = {"turns": []}
 
         bot.chat_data[ctx.author.id]["enabled"] = True
+        bot.chat_data[ctx.author.id]["channel"] = ctx.message.channel.id
 
         await ctx.reply(
             "Just start texting me. "
@@ -293,6 +297,10 @@ def run(discord_token, **kwargs):
     @bot.command()
     async def userinfo(ctx, user: discord.Member = None):
         """Display chat data for user"""
+        
+        if ctx.author.id not in bot.chat_data:
+            await ctx.reply("You have no chat data.")
+            return
 
         if user is None:
             user = ctx.author
