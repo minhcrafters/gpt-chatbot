@@ -18,6 +18,10 @@ from gpt2bot.utils import (
     is_question,
 )
 
+from pylatexenc.latex2text import LatexNodes2Text
+
+converter = LatexNodes2Text()
+
 logger = setup_logger(__name__)
 
 
@@ -169,7 +173,7 @@ class DiscordBot(commands.Bot):
                         messages, bot_messages, self.ranker_dict, debug=self.debug
                     )
 
-                bot_message = bot_message.strip()
+                bot_message = converter.latex_to_text(bot_message.strip())
 
                 await asyncio.sleep(5)
 
