@@ -412,7 +412,8 @@ def generate_responses(messages, model, tokenizer, seed=None, debug=False, **kwa
 
     outputs = model.generate(
         input_ids=inputs,
-        max_new_tokens=kwargs.get("max_new_tokens"),
+        max_length=2048,
+        # max_new_tokens=kwargs.get("max_new_tokens", 64),
         use_cache=True,
         min_p=0.1,
         temperature=1.5,
