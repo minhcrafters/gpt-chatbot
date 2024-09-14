@@ -148,7 +148,7 @@ class DiscordBot(commands.Bot):
             logger.debug(f"Messages of {message.author.name}:")
 
             for m in messages:
-                logger.debug(f"-> {m['from']}: {m['value']}")
+                logger.debug(f"-> {m['role']}: {m['content']}")
 
             async with message.channel.typing():
                 bot_messages = generate_responses(
@@ -176,7 +176,7 @@ class DiscordBot(commands.Bot):
 
                 # bot_message = bot_message.split(": ")[-1]
 
-                if messages[-1]["from"] == "human":
+                if messages[-1]["role"] == "user":
                     messages.append({"role": "assistant", "content": clean_text(bot_message)})
 
                 await message.reply(bot_message, mention_author=False)
