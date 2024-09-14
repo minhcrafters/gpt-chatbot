@@ -131,7 +131,9 @@ class DiscordBot(commands.Bot):
 
             for bot_message in turn["bot_messages"]:
                 # prompt += f"{clean_text(bot_message)}\n"
-                messages.append({"role": "assistant", "content": clean_text(bot_message)})
+                messages.append(
+                    {"role": "assistant", "content": clean_text(bot_message)}
+                )
 
         modified_gen_kwargs = self.generator_kwargs.copy()
         modified_gen_kwargs["temperature"] = float(
@@ -177,14 +179,19 @@ class DiscordBot(commands.Bot):
                 # bot_message = bot_message.split(": ")[-1]
 
                 if messages[-1]["role"] == "user":
-                    messages.append({"role": "assistant", "content": clean_text(bot_message)})
+                    messages.append(
+                        {"role": "assistant", "content": clean_text(bot_message)}
+                    )
 
-                await message.reply(bot_message, mention_author=False)
+                turn_messages = len(bot_message) // 2000 + 1
+
+                for i in range(turn_messages):
+                    await message.reply(
+                        bot_message[i * 2000 : (i + 1) * 2000], mention_author=False
+                    )
                 turn["bot_messages"].append(bot_message)
             else:
-                await message.reply(
-                    "`I'm sorry, I didn't get that.`", mention_author=False
-                )
+                await message.reply("`blank message`", mention_author=False)
                 # turn["bot_messages"].append("I'm sorry, I didn't get that.\n")
 
             logger.debug(
@@ -201,7 +208,7 @@ class DiscordBot(commands.Bot):
             if message.author.id in self.chat_data:
                 if self.chat_data[message.author.id]["channel"] != message.channel.id:
                     return
-                
+
                 max_turns_history = self.chatbot_params.get("max_turns_history", 2)
                 # giphy_prob = self.chatbot_params.get("giphy_prob", 0.1)
                 # giphy_max_words = self.chatbot_params.get("giphy_max_words", 10)
@@ -290,7 +297,7 @@ def run(discord_token, **kwargs):
     @bot.command()
     async def userinfo(ctx, user: discord.Member = None):
         """Display chat data for user"""
-        
+
         if ctx.author.id not in bot.chat_data:
             await ctx.reply("You have no chat data.")
             return

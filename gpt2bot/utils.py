@@ -390,7 +390,7 @@ def load_model(**kwargs):
 
 def clean_text(txt: str):
     """Remove unnecessary spaces."""
-    return " ".join(txt.strip().split())
+    return txt.strip()
 
 
 def generate_responses(messages, model, tokenizer, seed=None, debug=False, **kwargs):
