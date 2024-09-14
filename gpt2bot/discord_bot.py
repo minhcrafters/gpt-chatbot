@@ -127,11 +127,11 @@ class DiscordBot(commands.Bot):
         for turn in turns[from_index:]:
             for user_message in turn["user_messages"]:
                 # prompt += f"USER: {clean_text(user_message)}\n"
-                messages.append({"from": "human", "value": clean_text(user_message)})
+                messages.append({"role": "user", "content": clean_text(user_message)})
 
             for bot_message in turn["bot_messages"]:
                 # prompt += f"{clean_text(bot_message)}\n"
-                messages.append({"from": "gpt", "value": clean_text(bot_message)})
+                messages.append({"role": "assistant", "content": clean_text(bot_message)})
 
         modified_gen_kwargs = self.generator_kwargs.copy()
         modified_gen_kwargs["temperature"] = float(
@@ -177,7 +177,7 @@ class DiscordBot(commands.Bot):
                 # bot_message = bot_message.split(": ")[-1]
 
                 if messages[-1]["from"] == "human":
-                    messages.append({"from": "gpt", "value": clean_text(bot_message)})
+                    messages.append({"role": "assistant", "content": clean_text(bot_message)})
 
                 await message.reply(bot_message, mention_author=False)
                 turn["bot_messages"].append(bot_message)

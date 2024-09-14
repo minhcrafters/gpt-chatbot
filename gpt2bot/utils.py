@@ -400,13 +400,7 @@ def generate_responses(messages, model, tokenizer, seed=None, debug=False, **kwa
 
     tokenizer = get_chat_template(
         tokenizer,
-        chat_template="llama-3",
-        mapping={
-            "role": "from",
-            "content": "value",
-            "user": "human",
-            "assistant": "gpt",
-        },
+        chat_template="llama-3.1",
     )
 
     inputs = tokenizer.apply_chat_template(
@@ -417,7 +411,11 @@ def generate_responses(messages, model, tokenizer, seed=None, debug=False, **kwa
     # outputs = pipeline(prompt, **kwargs)
 
     outputs = model.generate(
-        input_ids=inputs, max_new_tokens=kwargs.get("max_new_tokens"), use_cache=True
+        input_ids=inputs,
+        max_new_tokens=kwargs.get("max_new_tokens"),
+        use_cache=True,
+        min_p=0.1,
+        temperature=1.5,
     )
 
     outputs = tokenizer.batch_decode(outputs)
