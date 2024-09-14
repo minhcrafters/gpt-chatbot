@@ -140,7 +140,7 @@ class DiscordBot(commands.Bot):
         modified_gen_kwargs["top_k"] = int(self.chat_data[message.author.id]["top_k"])
         modified_gen_kwargs["top_p"] = float(self.chat_data[message.author.id]["top_p"])
 
-        max_messages_per_turn = self.chatbot_params.get("max_messages_per_turn", 3)
+        max_messages_per_turn = self.chatbot_params.get("max_messages_per_turn", 1)
 
         for _ in range(max_messages_per_turn):
             bot_message = ""
