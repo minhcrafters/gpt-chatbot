@@ -140,10 +140,9 @@ class DiscordBot(commands.Bot):
         modified_gen_kwargs["top_k"] = int(self.chat_data[message.author.id]["top_k"])
         modified_gen_kwargs["top_p"] = float(self.chat_data[message.author.id]["top_p"])
 
-        max_messages_per_turn = self.chatbot_params.get("max_messages_per_turn", 2)
+        max_messages_per_turn = self.chatbot_params.get("max_messages_per_turn", 3)
 
-        curr_message = 0
-        while curr_message < max_messages_per_turn:
+        for _ in range(max_messages_per_turn):
             bot_message = ""
 
             logger.debug(f"Messages of {message.author.name}:")
@@ -175,7 +174,7 @@ class DiscordBot(commands.Bot):
             if bot_message != "":
                 # Append the bot's message to the prompt in the desired format
 
-                bot_message = bot_message.split(": ")[-1]
+                # bot_message = bot_message.split(": ")[-1]
 
                 if messages[-1]["from"] == "human":
                     messages.append({"from": "gpt", "value": clean_text(bot_message)})
@@ -191,12 +190,6 @@ class DiscordBot(commands.Bot):
             logger.debug(
                 f"{self.user.name} (replying to {message.author.name}): {bot_message}"
             )
-
-            if not is_question(bot_message):
-                # logger.debug("Bot message too short, continuing generation...")
-                curr_message += 1
-            else:
-                break
 
     async def on_message(self, message: Message):
         # Don't respond to messages from the bot itself

@@ -2,5 +2,7 @@ __pycache__/
 .ipynb_checkpoints/
 .idea/
 .vscode/
+MATH/
 .env
 *.pkl
+*.csv
