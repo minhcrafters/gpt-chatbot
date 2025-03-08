@@ -77,9 +77,7 @@ class DiscordBot(commands.Bot):
         self.debug = debug
 
         # Prepare the pipelines
-        self.generation_pipeline = load_model(
-            device=device, **generation_pipeline_kwargs
-        )
+        self.generation_pipeline = load_model(device=device, **generation_pipeline_kwargs)
 
         self.ranker_dict = build_ranker_dict(
             device=device, **prior_ranker_weights, **cond_ranker_weights
@@ -123,9 +121,7 @@ class DiscordBot(commands.Bot):
 
         messages = []
 
-        from_index = (
-            max(len(turns) - max_turns_history - 1, 0) if max_turns_history >= 0 else 0
-        )
+        from_index = max(len(turns) - max_turns_history - 1, 0) if max_turns_history >= 0 else 0
 
         # Initialize the conversation with user and bot messages
         for turn in turns[from_index:]:
@@ -135,14 +131,10 @@ class DiscordBot(commands.Bot):
 
             for bot_message in turn["bot_messages"]:
                 # prompt += f"{clean_text(bot_message)}\n"
-                messages.append(
-                    {"role": "assistant", "content": clean_text(bot_message)}
-                )
+                messages.append({"role": "assistant", "content": clean_text(bot_message)})
 
         modified_gen_kwargs = self.generator_kwargs.copy()
-        modified_gen_kwargs["temperature"] = float(
-            self.chat_data[message.author.id]["temperature"]
-        )
+        modified_gen_kwargs["temperature"] = float(self.chat_data[message.author.id]["temperature"])
         modified_gen_kwargs["top_k"] = int(self.chat_data[message.author.id]["top_k"])
         modified_gen_kwargs["top_p"] = float(self.chat_data[message.author.id]["top_p"])
 
@@ -183,9 +175,7 @@ class DiscordBot(commands.Bot):
                 # bot_message = bot_message.split(": ")[-1]
 
                 if messages[-1]["role"] == "user":
-                    messages.append(
-                        {"role": "assistant", "content": clean_text(bot_message)}
-                    )
+                    messages.append({"role": "assistant", "content": clean_text(bot_message)})
 
                 turn_messages = len(bot_message) // 2000 + 1
 
@@ -198,9 +188,7 @@ class DiscordBot(commands.Bot):
                 await message.reply("`blank message`", mention_author=False)
                 # turn["bot_messages"].append("I'm sorry, I didn't get that.\n")
 
-            logger.debug(
-                f"{self.user.name} (replying to {message.author.name}): {bot_message}"
-            )
+            logger.debug(f"{self.user.name} (replying to {message.author.name}): {bot_message}")
 
     async def on_message(self, message: Message):
         # Don't respond to messages from the bot itself
@@ -224,16 +212,16 @@ class DiscordBot(commands.Bot):
                     return
 
                 if "temperature" not in self.chat_data[message.author.id]:
-                    self.chat_data[message.author.id]["temperature"] = (
-                        self.generator_kwargs.get("temperature", 0.9)
+                    self.chat_data[message.author.id]["temperature"] = self.generator_kwargs.get(
+                        "temperature", 0.9
                     )
                 if "top_k" not in self.chat_data[message.author.id]:
-                    self.chat_data[message.author.id]["top_k"] = (
-                        self.generator_kwargs.get("top_k", 80)
+                    self.chat_data[message.author.id]["top_k"] = self.generator_kwargs.get(
+                        "top_k", 80
                     )
                 if "top_p" not in self.chat_data[message.author.id]:
-                    self.chat_data[message.author.id]["top_p"] = (
-                        self.generator_kwargs.get("top_p", 0.95)
+                    self.chat_data[message.author.id]["top_p"] = self.generator_kwargs.get(
+                        "top_p", 0.95
                     )
 
                 if "turns" not in self.chat_data[message.author.id]:
@@ -258,14 +246,17 @@ class DiscordBot(commands.Bot):
 
 
 def run(discord_token, **kwargs):
-    bot = DiscordBot(command_prefix=".", **kwargs)
+    COMMAND_PREFIX = "."
+    bot = DiscordBot(command_prefix=COMMAND_PREFIX, **kwargs)
 
     @bot.command()
     async def start(ctx):
-        """Start a new dialogue when user sends the command "!start"."""
+        """Start a new dialogue when user sends the command "{COMMAND_PREFIX}start"."""
         if ctx.author.id in bot.chat_data:
             if bot.chat_data[ctx.author.id]["enabled"] == True:
-                await ctx.reply("I'm already chatting. Use !reset to start a new one.")
+                await ctx.reply(
+                    f"I'm already chatting. Use {COMMAND_PREFIX}reset to start a new one."
+                )
                 return
 
         logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Started their chat]")
@@ -278,19 +269,19 @@ def run(discord_token, **kwargs):
 
         await ctx.reply(
             "Just start texting me. "
-            "If I'm getting annoying, type `!reset`. "
+            f"If I'm getting annoying, type `{COMMAND_PREFIX}reset`. "
             "Make sure to send no more than one message per turn. "
-            "Use `!save` if you want to save your chat history with me."
+            f"Use `{COMMAND_PREFIX}save` if you want to save your chat history with me."
         )
 
     @bot.command(alias=["end"])
     async def stop(ctx):
-        """Stop the dialogue when user sends the command "!stop"."""
+        """Stop the dialogue when user sends the command "{COMMAND_PREFIX}stop"."""
         if ctx.author.id in bot.chat_data:
             if bot.chat_data[ctx.author.id]["enabled"] == True:
                 bot.chat_data[ctx.author.id]["enabled"] = False
                 await ctx.reply(
-                    "I'm done. Use `!start` when you wanna talk with me again."
+                    f"I'm done. Use `{COMMAND_PREFIX}start` when you wanna talk with me again."
                 )
 
     @bot.command()
@@ -325,21 +316,17 @@ def run(discord_token, **kwargs):
             value=str(bot.chat_data[user.id]["temperature"]),
             inline=False,
         )
-        embed.add_field(
-            name="Top-k", value=str(bot.chat_data[user.id]["top_k"]), inline=False
-        )
-        embed.add_field(
-            name="Top-p", value=str(bot.chat_data[user.id]["top_p"]), inline=False
-        )
+        embed.add_field(name="Top-k", value=str(bot.chat_data[user.id]["top_k"]), inline=False)
+        embed.add_field(name="Top-p", value=str(bot.chat_data[user.id]["top_p"]), inline=False)
         embed.set_footer(text="i hate this so much wth")
 
         await ctx.reply(embed=embed)
 
     @bot.command()
     async def params(ctx, key: str, value):
-        """Set the dialogue parameters when user sends the command "!params"."""
+        """Set the dialogue parameters when user sends the command "{COMMAND_PREFIX}params"."""
         if ctx.author.id not in bot.chat_data:
-            await ctx.reply("I'm not chatting. Use !start to start.")
+            await ctx.reply(f"I'm not chatting. Use {COMMAND_PREFIX}start to start.")
             return
 
         available_options = ["temperature", "top_k", "top_p"]
@@ -356,35 +343,31 @@ def run(discord_token, **kwargs):
                     try:
                         value = float(value)
                     except ValueError:
-                        await ctx.reply(
-                            "You can only have floats in your values buddy."
-                        )
+                        await ctx.reply("You can only have floats in your values buddy.")
                         return
 
                 bot.chat_data[ctx.author.id][key] = value
 
-        logger.debug(
-            f"{ctx.author.name} ({ctx.author.id}): [Set their chat parameters]"
-        )
+        logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Set their chat parameters]")
 
         await ctx.reply(f"`{key}` have been updated to `{value}`.")
 
     @bot.command()
     async def reset(ctx):
-        """Reset the dialogue history when user sends the command "!reset"."""
+        """Reset the dialogue history when user sends the command "{COMMAND_PREFIX}reset"."""
         if ctx.author.id not in bot.chat_data:
-            await ctx.reply("I'm not chatting. Use !start to start.")
+            await ctx.reply(f"I'm not chatting. Use {COMMAND_PREFIX}start to start.")
             return
 
         logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Reset their chat]")
         bot.chat_data[ctx.author.id]["turns"] = []
-        await ctx.reply("Beep beep!")
+        await ctx.reply(f"Beep beep!")
 
     @bot.command()
     async def save(ctx):
-        """Save the dialogue data when user sends the command "!save"."""
+        """Save the dialogue data when user sends the command "{COMMAND_PREFIX}save"."""
         if ctx.author.id not in bot.chat_data:
-            await ctx.reply("I'm not chatting. Use !start to start.")
+            await ctx.replyf(f"I'm not chatting. Use {COMMAND_PREFIX}start to start.")
             return
 
         logger.debug(f"{ctx.author.name} ({ctx.author.id}): [Saved their chat data]")
