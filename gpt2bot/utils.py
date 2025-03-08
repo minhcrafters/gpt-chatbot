@@ -362,6 +362,19 @@ def parse_config(config_path):
         ),
     )
 
+def load_model_gguf(**kwargs):
+    model = transformers.AutoModel.from_pretrained(
+        kwargs.get("model"),
+        gguf_file=kwargs.get("gguf_file")
+    )
+    
+    tokenizer = transformers.AutoTokenizer.from_pretrained(
+        kwargs.get("tokenizer"),
+        gguf_file=kwargs.get("gguf_file")
+    )
+
+    return model, tokenizer
+
 
 def load_pipeline(task: str, **kwargs):
     """Load a pipeline."""
@@ -372,7 +385,6 @@ def load_pipeline(task: str, **kwargs):
     # model = transformers.AutoModel.from_pretrained(kwargs.get("model"))
 
     return transformers.pipeline(task, **kwargs)
-
 
 def load_model(**kwargs):
     model, tokenizer = FastLanguageModel.from_pretrained(

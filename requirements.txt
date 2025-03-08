@@ -1,12 +1,9 @@
-torch
-torchvision
-torchaudio
 transformers
 accelerate
 evaluate
+xformers==0.0.28
 discord.py
 nltk
-unsloth
 trl
 peft
 bitsandbytes
