@@ -258,7 +258,7 @@ class DiscordBot(commands.Bot):
 
 
 def run(discord_token, **kwargs):
-    bot = DiscordBot(command_prefix="!", **kwargs)
+    bot = DiscordBot(command_prefix=".", **kwargs)
 
     @bot.command()
     async def start(ctx):
